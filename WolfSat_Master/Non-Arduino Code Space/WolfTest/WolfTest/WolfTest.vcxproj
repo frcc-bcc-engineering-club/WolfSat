@@ -94,6 +94,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -149,9 +150,11 @@
   <ItemGroup>
     <ClInclude Include="targetver.h" />
     <ClInclude Include="wolf.h" />
+    <ClInclude Include="wolfPins.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="wolf.cpp" />
+    <ClCompile Include="wolfPins.cpp" />
     <ClCompile Include="WolfTest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

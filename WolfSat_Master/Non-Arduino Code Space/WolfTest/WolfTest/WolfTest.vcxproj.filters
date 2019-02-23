@@ -21,12 +21,18 @@
     <ClInclude Include="wolf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="wolfPins.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WolfTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wolf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wolfPins.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
