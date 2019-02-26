@@ -19,8 +19,8 @@ WolfPins::~WolfPins()
 //void WolfPins::setup_Pins()
 //{
 //
-//	pinMode(PIN_LED(), OUTPUT);
-//	pinMode(PIN_DEBUG(), INPUT);
+//	pinMode(getPin_LED(), OUTPUT);
+//	pinMode(getPin_DEBUG(), INPUT);
 //	
 //}
 
