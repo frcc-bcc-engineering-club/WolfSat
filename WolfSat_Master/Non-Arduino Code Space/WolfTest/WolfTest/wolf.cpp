@@ -1,23 +1,23 @@
-#include "wolf.h"
+#include "Wolf.h"
 
 
-wolf::wolf()
+Wolf::Wolf()
 {
-	pinOut = wolfPins();
-	debugger = wolfDebug(pinOut.getPin_DEBUG());
+	pinOut = WolfPins();
+	debugger = WolfDebug(pinOut.getPin_DEBUG());
 }
 
 
-wolf::~wolf()
+Wolf::~Wolf()
 {
 }
 
 
-void wolf::taskManager()
+void Wolf::taskManager()
 {
 	// do stuff...
 }
 
 
-wolfPins wolf::get_pinOut() { return pinOut; }
-wolfDebug wolf::get_debugger() { return debugger; }
+WolfPins Wolf::get_pinOut() { return pinOut; }
+WolfDebug Wolf::get_debugger() { return debugger; }

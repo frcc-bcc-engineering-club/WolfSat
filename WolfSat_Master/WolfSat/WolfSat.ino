@@ -1,9 +1,9 @@
 #include <SparkFun_Qwiic_OpenLog_Arduino_Library.h>
 #include <Wire.h>
-#include <wolf.h>
+#include <Wolf.h>
 
-wolf wolfSat;
-wolfPins wolfSat_Pins;
+Wolf wolfSat;
+WolfPins wolfSat_Pins;
 OpenLog logOne;
 
 void setup() 
@@ -15,7 +15,7 @@ void setup()
 
 void setup_Wolf()
 {
-  wolfSat = wolf();
+  wolfSat = Wolf();
   wolfSat_Pins = wolfSat.get_pinOut();
 }
 

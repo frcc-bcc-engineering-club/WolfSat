@@ -2,24 +2,24 @@
 #ifndef WOLF_H
 #define WOLF_H
 
-#include "wolfPins.h"
-#include "wolfDebug.h"
+#include "WolfPins.h"
+#include "WolfDebug.h"
 
 // Visual Studio Copy. Some functions commented out...
 
 
-class wolf
+class Wolf
 {
 public:
-	wolf();
+	Wolf();
 	void taskManager();
-	wolfPins get_pinOut();
-	wolfDebug get_debugger();
-	~wolf();
+	WolfPins get_pinOut();
+	WolfDebug get_debugger();
+	~Wolf();
 private:
-	wolfPins pinOut;
-	wolfDebug debugger;
+	WolfPins pinOut;
+	WolfDebug debugger;
 };
-#endif // !WOLF_H
+#endif // !Wolf_H
 
 

@@ -1,27 +1,27 @@
-#include "wolfDebug.h"
+#include "WolfDebug.h"
 
-wolfDebug::wolfDebug()
+WolfDebug::WolfDebug()
 {
 	debugMode = false;
 }
 
 
-wolfDebug::wolfDebug(int debugPin)
+WolfDebug::WolfDebug(int debugPin)
 {
 	debugMode = false;
 	//setup_Debug(debugPin);
 }
 
 
-wolfDebug::~wolfDebug()
+WolfDebug::~WolfDebug()
 {
 }
 
 
-bool wolfDebug::get_debugMode() { return debugMode; }
+bool WolfDebug::get_debugMode() { return debugMode; }
 
 
-//void wolfDebug::setup_Debug(int debugPin)
+//void WolfDebug::setup_Debug(int debugPin)
 //{
 //	if (digitalRead(debugPin) == HIGH)
 //	{

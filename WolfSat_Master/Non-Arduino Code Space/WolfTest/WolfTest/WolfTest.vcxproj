@@ -149,14 +149,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="wolf.h" />
-    <ClInclude Include="wolfDebug.h" />
-    <ClInclude Include="wolfPins.h" />
+    <ClInclude Include="Wolf.h" />
+    <ClInclude Include="WolfDebug.h" />
+    <ClInclude Include="WolfPins.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="wolf.cpp" />
-    <ClCompile Include="wolfDebug.cpp" />
-    <ClCompile Include="wolfPins.cpp" />
+    <ClCompile Include="Wolf.cpp" />
+    <ClCompile Include="WolfDebug.cpp" />
+    <ClCompile Include="WolfPins.cpp" />
     <ClCompile Include="WolfTest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

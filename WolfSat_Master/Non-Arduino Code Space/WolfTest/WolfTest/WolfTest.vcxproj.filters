@@ -18,13 +18,13 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="wolf.h">
+    <ClInclude Include="Wolf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="wolfPins.h">
+    <ClInclude Include="WolfDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="wolfDebug.h">
+    <ClInclude Include="WolfPins.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -32,13 +32,13 @@
     <ClCompile Include="WolfTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wolf.cpp">
+    <ClCompile Include="Wolf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wolfPins.cpp">
+    <ClCompile Include="WolfDebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wolfDebug.cpp">
+    <ClCompile Include="WolfPins.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

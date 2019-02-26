@@ -2,20 +2,20 @@
 #ifndef WOLFDEBUG_H
 #define WOLFDEBUG_H
 
-#include "wolfPins.h"
+#include "WolfPins.h"
 
 // Visual Studio version, some functions commented out...
 
-class wolfDebug
+class WolfDebug
 {
 public:
-	wolfDebug();
-	wolfDebug(int debugPin);
-	~wolfDebug();
+	WolfDebug();
+	WolfDebug(int debugPin);
+	~WolfDebug();
 	bool get_debugMode();
 private:
 	//void setup_Debug(int debugPin);
 	bool debugMode;
 };
 
-#endif // !wolfDebug_H
+#endif // !WolfDebug_H
