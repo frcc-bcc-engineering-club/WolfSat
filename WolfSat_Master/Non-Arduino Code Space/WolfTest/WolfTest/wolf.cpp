@@ -4,6 +4,7 @@
 wolf::wolf()
 {
 	pinOut = wolfPins();
+	debugger = wolfDebug(pinOut.getPin_DEBUG());
 }
 
 
@@ -19,3 +20,4 @@ void wolf::taskManager()
 
 
 wolfPins wolf::get_pinOut() { return pinOut; }
+wolfDebug wolf::get_debugger() { return debugger; }

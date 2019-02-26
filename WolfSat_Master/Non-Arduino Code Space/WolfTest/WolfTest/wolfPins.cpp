@@ -5,7 +5,7 @@
 wolfPins::wolfPins()
 {
 	
-	PIN_DEBUG = 1;
+	PIN_DEBUG = 12;
 	PIN_LED = 13;
 	//setup_Pins();
 }

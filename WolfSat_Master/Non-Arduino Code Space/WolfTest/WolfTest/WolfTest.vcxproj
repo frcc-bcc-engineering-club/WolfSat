@@ -150,10 +150,12 @@
   <ItemGroup>
     <ClInclude Include="targetver.h" />
     <ClInclude Include="wolf.h" />
+    <ClInclude Include="wolfDebug.h" />
     <ClInclude Include="wolfPins.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="wolf.cpp" />
+    <ClCompile Include="wolfDebug.cpp" />
     <ClCompile Include="wolfPins.cpp" />
     <ClCompile Include="WolfTest.cpp" />
   </ItemGroup>

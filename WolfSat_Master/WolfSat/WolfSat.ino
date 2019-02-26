@@ -6,15 +6,10 @@ wolf wolfSat;
 wolfPins wolfSat_Pins;
 OpenLog logOne;
 
-bool debugMode;
-
-
 void setup() 
 {
   setup_Wolf();
-  setup_Debug();
   setup_Wire();
-
 }
 
 
@@ -25,25 +20,13 @@ void setup_Wolf()
 }
 
 
-void setup_Debug()
-{
-  if(digitalRead(wolfSat_Pins.getPin_DEBUG()) == HIGH)
-  {
-    Serial.begin(9600);
-    Serial.println("WOLFSAT DEBUG MODE");
-    debugMode = true;
-  }
-  else
-    debugMode = false;
-}
-
-
 void setup_Wire()
 {
   Wire.begin();
   logOne.begin();
+  logOne.append("DataTest.txt");
   
-  if(debugMode)
+  if(wolfSat.get_debugger().get_debugMode())
     Serial.println("WIRE SETUP COMPLETE");
 }
 
@@ -53,7 +36,7 @@ void loop() {
   int x = 0;
   x++;
   logOne.println("X = " + String(x));
-  if(debugMode)
+  if(wolfSat.get_debugger().get_debugMode())
     Serial.println("X = " + String(x));
   digitalWrite(wolfSat_Pins.getPin_LED(), HIGH);
   delay(1000);
