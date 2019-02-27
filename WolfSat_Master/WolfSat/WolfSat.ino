@@ -6,9 +6,12 @@
 #include <WolfDebug.h>
 #include <WolfPins.h>
 
+//Wolf wolfSat;
+Wolf* wolfStar;
 
 void setup() 
 {
+  wolfStar = &Wolf();
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);
   delay(1000);
@@ -21,12 +24,13 @@ void setup()
 
 void loop() 
 {
-  Wolf wolfSat = Wolf();
-  WolfPins wolfSat_Pins = wolfSat.get_pinOut();
+  //Wolf wolfSat = Wolf();
+  //WolfPins wolfSat_Pins = wolfSat.get_pinOut();
+  wolfStar->get_logOne().stringToLog("Test Complete");
   digitalWrite(13, LOW);
   delay(1000);
   Serial.println("Check");
-  wolfSat.get_logOne().stringToLog("Test Complete");
+  //wolfSat.get_logOne().stringToLog("Test Complete");
   Serial.println("Mark");
   digitalWrite(13, HIGH);
   delay(1000);
