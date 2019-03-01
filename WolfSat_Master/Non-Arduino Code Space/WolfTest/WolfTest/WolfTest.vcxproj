@@ -151,7 +151,9 @@
     <ClInclude Include="BigSet.h" />
     <ClInclude Include="DataSet.h" />
     <ClInclude Include="LoggerWrap.h" />
+    <ClInclude Include="Sensor.h" />
     <ClInclude Include="SerialLogger.h" />
+    <ClInclude Include="SmallSet.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Wolf.h" />
     <ClInclude Include="WolfDebug.h" />
@@ -161,7 +163,9 @@
     <ClCompile Include="BigSet.cpp" />
     <ClCompile Include="DataSet.cpp" />
     <ClCompile Include="LoggerWrap.cpp" />
+    <ClCompile Include="Sensor.cpp" />
     <ClCompile Include="SerialLogger.cpp" />
+    <ClCompile Include="SmallSet.cpp" />
     <ClCompile Include="Wolf.cpp" />
     <ClCompile Include="WolfDebug.cpp" />
     <ClCompile Include="WolfPins.cpp" />

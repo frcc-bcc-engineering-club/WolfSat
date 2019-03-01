@@ -1,2 +1,7 @@
-﻿  WolfTest.cpp
+﻿  LoggerWrap.cpp
+  Sensor.cpp
+  SerialLogger.cpp
+  Wolf.cpp
+  WolfTest.cpp
+  Generating Code...
   WolfTest.vcxproj -> C:\Users\SourOne\Spinnaker\EngClub\WolfSat\WolfSat\WolfSat_Master\Non-Arduino Code Space\WolfTest\Debug\WolfTest.exe

@@ -10,7 +10,7 @@ public:
 	LoggerWrap();
 	LoggerWrap(bool in_is);
 	~LoggerWrap();
-	virtual void sendToLog(DataSet& in_set) = 0;
+	virtual void sendToLog(DataSet<class type> in_set) = 0;
 protected:
 	void set_isSerial(bool in_is);
 private:

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DEFECTS>
+  <DEFECT>
+    <SFA>
+      <FILEPATH>c:\users\sourone\spinnaker\engclub\wolfsat\wolfsat\wolfsat_master\non-arduino code space\wolftest\wolftest\</FILEPATH>
+      <FILENAME>wolftest.cpp</FILENAME>
+      <LINE>17</LINE>
+      <COLUMN>7</COLUMN>
+    </SFA>
+    <DEFECTCODE>6246</DEFECTCODE>
+    <DESCRIPTION>Local declaration of 'testWolf' hides declaration of the same name in outer scope. For additional information, see previous declaration at line '14' of 'c:\users\sourone\spinnaker\engclub\wolfsat\wolfsat\wolfsat_master\non-arduino code space\wolftest\wolftest\wolftest.cpp'.</DESCRIPTION>
+    <FUNCTION>main</FUNCTION>
+    <DECORATED>main</DECORATED>
+    <FUNCLINE>11</FUNCLINE>
+    <PATH>
+      <SFA>
+        <FILEPATH>c:\users\sourone\spinnaker\engclub\wolfsat\wolfsat\wolfsat_master\non-arduino code space\wolftest\wolftest\</FILEPATH>
+        <FILENAME>wolftest.cpp</FILENAME>
+        <LINE>14</LINE>
+        <COLUMN>6</COLUMN>
+      </SFA>
+    </PATH>
+  </DEFECT>
+</DEFECTS>

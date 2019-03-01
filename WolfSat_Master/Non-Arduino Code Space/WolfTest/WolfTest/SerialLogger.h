@@ -2,7 +2,16 @@
 #ifndef SERIALLOGGER_H
 #define SERIALLOGGER_H
 
+#ifdef DATASET_H
+
+
+#endif // DATASET_H
+
+
+
 #include "LoggerWrap.h"
+#include "DataSet.h"
+
 class SerialLogger : public LoggerWrap
 {
 public:
@@ -10,7 +19,7 @@ public:
 	SerialLogger(int in_number);
 	~SerialLogger();
 	//OpenLog& get_logger() const;
-	virtual void sendToLog(DataSet& in_set);
+	virtual void sendToLog(DataSet<class type> in_set);
 	//void stringToLog(String in_string);
 	SerialLogger& operator=(const SerialLogger& in_logger);
 private:
@@ -19,5 +28,8 @@ private:
 	// OpenLog logger;
 	int number;
 };
+
+//template<class innerType>
+
 
 #endif // !SERIALLOGGER_H
