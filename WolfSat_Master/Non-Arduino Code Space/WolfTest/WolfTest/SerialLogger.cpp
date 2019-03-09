@@ -1,14 +1,14 @@
 #include "SerialLogger.h"
 #include "DataSet.h"
 
-//template
+
 SerialLogger::SerialLogger() : LoggerWrap(true)
 {
 	number = 0;
 	setup_Log();
 }
 
-//template
+
 SerialLogger::SerialLogger(int in_number) : LoggerWrap(true)
 {
 	if ((number < 4) && (number > 0))
@@ -18,13 +18,13 @@ SerialLogger::SerialLogger(int in_number) : LoggerWrap(true)
 	setup_Log();
 }
 
-//template
+
 SerialLogger::~SerialLogger()
 {
 
 }
 
-//template
+
 void SerialLogger::sendToLog(DataSet<class type> in_set)
 {
 	int lim = in_set.get_size();
@@ -38,20 +38,20 @@ void SerialLogger::sendToLog(DataSet<class type> in_set)
 	}
 }
 
-//template
+//
 //void SerialLogger::stringToLog(String toSend)
 //{
-// send(toSend);
+//	send(toSend);
 //}
 
-//template
+
 void SerialLogger::setup_Log()
 {
-	// Wire.begin();
-	// logger.begin();
+	 //Wire.begin();
+	 //logger.begin();
 }
 
-//template
+
 //void SerialLogger::send(String toSend)
 //{
 //	switch (number)
@@ -76,7 +76,7 @@ void SerialLogger::setup_Log()
 //	}
 //}
 
-//template
+
 SerialLogger& SerialLogger::operator=(const SerialLogger& in_logger)
 {
 	return *this;

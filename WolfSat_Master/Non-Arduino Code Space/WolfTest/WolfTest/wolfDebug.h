@@ -4,7 +4,7 @@
 
 #include "WolfPins.h"
 
-// Visual Studio version, some functions commented out...
+// Arduino version
 
 class WolfDebug
 {
@@ -14,7 +14,7 @@ public:
 	~WolfDebug();
 	bool get_debugMode();
 private:
-	//void setup_Debug(int debugPin);
+	void setup_Debug(int debugPin);
 	bool debugMode;
 };
 

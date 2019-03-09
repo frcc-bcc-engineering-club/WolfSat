@@ -2,10 +2,7 @@
 #ifndef SERIALLOGGER_H
 #define SERIALLOGGER_H
 
-#ifdef DATASET_H
-
-
-#endif // DATASET_H
+// Arduino version
 
 
 
@@ -25,11 +22,10 @@ public:
 private:
 	virtual void setup_Log();
 	//void send(String in_string);
-	// OpenLog logger;
+	//OpenLog logger;
 	int number;
 };
 
-//template<class innerType>
 
 
 #endif // !SERIALLOGGER_H

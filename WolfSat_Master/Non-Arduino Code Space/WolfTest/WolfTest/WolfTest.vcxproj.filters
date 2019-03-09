@@ -33,16 +33,10 @@
     <ClInclude Include="DataSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BigSet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SerialLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Sensor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SmallSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -65,16 +59,10 @@
     <ClCompile Include="DataSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BigSet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SerialLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sensor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SmallSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
