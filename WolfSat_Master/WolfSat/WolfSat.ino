@@ -1,3 +1,10 @@
+/*
+ *  In Memory of Randy
+ */
+
+
+#include <SparkFunTMP102.h>
+
 #include <LSM9DS1_Registers.h>
 #include <LSM9DS1_Types.h>
 #include <SparkFunLSM9DS1.h>
@@ -10,12 +17,27 @@
 #define LSM9DS1_AG  0x6B // Would be 0x6A if SDO_AG is LOW
 
 #define LIM_IMU 9
+#define LIM_TMP 1
+
+#define HIGH_TEMP 50
+#define LOW_TEMP 49
 
 DataSet<double> imuDat;
+DataSet<double> tmp1Dat;
 
 LSM9DS1 imu;
+TMP102 innerTemp1(0x48);
 
 void setup() 
+{
+  Serial.begin(9600);
+  Serial.println("WolfSat RTOS");
+  setup_IMU();
+  setup_TMP(innerTemp1, tmp1Dat);
+}
+
+
+void setup_IMU()
 {
   imu.settings.device.commInterface = IMU_MODE_I2C;
   imu.settings.device.mAddress = LSM9DS1_M;
@@ -27,10 +49,24 @@ void setup()
     Serial.println("Looping to infinity.");
     while (1);
   }
-  imuDat = DataSet<double>(9);
-  Serial.begin(9600);
-  Serial.println("Hello");
+  
+  imuDat = DataSet<double>(LIM_IMU);
+  
   imu.begin();
+}
+
+
+template <typename type> void setup_TMP(TMP102& in_TMP, DataSet<type>& in_set)
+{
+  in_TMP.begin();
+  in_TMP.setFault(0);
+  in_TMP.setAlertPolarity(1);
+  in_TMP.setAlertMode(0);
+  in_TMP.setConversionRate(0);
+  in_TMP.setExtendedMode(0);
+  in_TMP.setHighTempC(HIGH_TEMP);
+  in_TMP.setLowTempC(LOW_TEMP);
+  in_set = DataSet<double>(LIM_TMP);
 }
 
 
@@ -38,6 +74,8 @@ void loop()
 {
   run_imu();
   outSet(imuDat);
+  run_TMP(innerTemp1, tmp1Dat);
+  outSet(tmp1Dat);
   delay(1000);
   
   Serial.println("Done...");
@@ -56,6 +94,28 @@ template<typename type> void outSet(DataSet<type>& in_set)
 }
 
 
+template <typename type> void run_TMP(TMP102& in_TMP, DataSet<type>& in_set)
+{
+  in_TMP.wakeup();
+  fill_tmpDat(in_TMP, in_set);
+  in_TMP.sleep();
+}
+
+template<typename type> void fill_tmpDat(TMP102& in_TMP, DataSet<type>& in_set)
+{
+  in_set.set_data(in_TMP.readTempC());
+}
+
+
+void run_imu()
+{
+  imu.readAccel();
+  imu.readGyro();
+  imu.readMag();
+  fill_imuDat();
+}
+
+
 void fill_imuDat()
 {
   imuDat.set_data(imu.calcAccel(imu.ax));
@@ -70,11 +130,4 @@ void fill_imuDat()
 }
 
 
-void run_imu()
-{
-  imu.readAccel();
-  imu.readGyro();
-  imu.readMag();
-  fill_imuDat();
-}
 
