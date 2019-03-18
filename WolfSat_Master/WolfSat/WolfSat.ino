@@ -1,3 +1,12 @@
+#include <DataSet.h>
+#include <sensirion_arch_config.h>
+#include <sensirion_shdlc.h>
+#include <sensirion_uart.h>
+
+
+
+#include <sps30.h>
+#include <unistd.h>
 /*
  *  In Memory of Randy
  */
@@ -11,7 +20,6 @@
 
 #include <SparkFun_Qwiic_OpenLog_Arduino_Library.h>
 
-#include <DataSet.h>
 
 #define LSM9DS1_M   0x1E // Would be 0x1C if SDO_M is LOW
 #define LSM9DS1_AG  0x6B // Would be 0x6A if SDO_AG is LOW
@@ -89,7 +97,11 @@ template<typename type> void outSet(DataSet<type>& in_set)
   {
     String toWrite = (String)in_set.get_data(pos);
     pos++;
+    #if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    Serial3.println(toWrite);
+    #else
     Serial.println(toWrite);
+    #endif
   }
 }
 
