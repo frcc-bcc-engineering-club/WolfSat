@@ -37,9 +37,22 @@
 // Static consts for others
 #define DEBUG_SPEED 9600
 
+// Preprocesor directives
+#if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#define DEBUG Serial3
+#define LOGG1 Serial
+#define LOGG2 Serial1
+#define PARTI Serial2
+#else
+#define DEBUG Serial
+#define LOGG1 Serial
+#define LOGG2 Serial
+#define PARTI Serial
+#endif
+
+// Global vars
 DataSet<double> imuDat;
 DataSet<double> tmp1Dat;
-
 LSM9DS1 imu;
 TMP102 innerTemp1(0x48);
 
@@ -54,11 +67,7 @@ void setup()
 
 void setup_SERIAL()
 {
-  #if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  Serial3.begin(DEBUG_SPEED);
-  #else
-  Serial.begin(DEBUG_SPEED);
-  #endif
+  DEBUG.begin(DEBUG_SPEED);
 }
 
 
@@ -70,8 +79,8 @@ void setup_IMU()
 
   if (!imu.begin())
   {
-    Serial.println("Failed to communicate with LSM9DS1.");
-    Serial.println("Looping to infinity.");
+    DEBUG.println("Failed to communicate with LSM9DS1.");
+    DEBUG.println("Looping to infinity.");
     while (1);
   }
   
@@ -103,7 +112,7 @@ void loop()
   outSet(tmp1Dat);
   delay(1000);
   
-  Serial.println("Done...");
+  DEBUG.println("Done...");
 }
 
 template<typename type> void outSet(DataSet<type>& in_set)
@@ -114,11 +123,7 @@ template<typename type> void outSet(DataSet<type>& in_set)
   {
     String toWrite = (String)in_set.get_data(pos);
     pos++;
-    #if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-    Serial3.println(toWrite);
-    #else
-    Serial.println(toWrite);
-    #endif
+    DEBUG.println(toWrite);
   }
 }
 
