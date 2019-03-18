@@ -30,6 +30,8 @@
 #define HIGH_TEMP 50
 #define LOW_TEMP 49
 
+#define DEBUG_SPEED 9600
+
 DataSet<double> imuDat;
 DataSet<double> tmp1Dat;
 
@@ -38,10 +40,20 @@ TMP102 innerTemp1(0x48);
 
 void setup() 
 {
-  Serial.begin(9600);
+  setup_SERIAL();
   Serial.println("WolfSat RTOS");
   setup_IMU();
   setup_TMP(innerTemp1, tmp1Dat);
+}
+
+
+void setup_SERIAL()
+{
+  #if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+  Serial3.begin(DEBUG_SPEED);
+  #else
+  Serial.begin(DEBUG_SPEED);
+  #endif
 }
 
 
