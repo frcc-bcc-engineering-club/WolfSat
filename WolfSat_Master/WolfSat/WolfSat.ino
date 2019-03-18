@@ -1,35 +1,40 @@
+/*
+ *  In Memory of Randy
+ */
+/*
+ * This is the WolfSat RT'OS' for the FRCC-BCC Engineering Club.
+ * It queries several sensors for data, logs them into a template
+ * object (DataSet<>), and then sends them to an SD card for data
+ * logging.
+ * 
+ * By James Craft, and hopefully others...
+ */
+ // WolfSat_lib inclusion
 #include <DataSet.h>
 #include <sensirion_arch_config.h>
 #include <sensirion_shdlc.h>
 #include <sensirion_uart.h>
 
-
-
+// External sensor libraries
 #include <sps30.h>
 #include <unistd.h>
-/*
- *  In Memory of Randy
- */
-
-
 #include <SparkFunTMP102.h>
-
 #include <LSM9DS1_Registers.h>
 #include <LSM9DS1_Types.h>
 #include <SparkFunLSM9DS1.h>
-
 #include <SparkFun_Qwiic_OpenLog_Arduino_Library.h>
 
-
+// Static consts for external sensors
 #define LSM9DS1_M   0x1E // Would be 0x1C if SDO_M is LOW
 #define LSM9DS1_AG  0x6B // Would be 0x6A if SDO_AG is LOW
-
-#define LIM_IMU 9
-#define LIM_TMP 1
-
 #define HIGH_TEMP 50
 #define LOW_TEMP 49
 
+// Static consts for DataSets
+#define LIM_IMU 9
+#define LIM_TMP 1
+
+// Static consts for others
 #define DEBUG_SPEED 9600
 
 DataSet<double> imuDat;
