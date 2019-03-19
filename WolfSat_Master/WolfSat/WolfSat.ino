@@ -75,6 +75,7 @@ TMP102 innerTemp1(0x48);
 
 void setup() 
 {
+  pinMode(LED_BUILTIN, OUTPUT);
   debugging = true;  // <<<<<< Could be pin controlled...<<<<<<<<<
   verboseDebug = true;  // Same here...
   cmdCount = 0;
@@ -82,20 +83,21 @@ void setup()
   activeLog = "boot";
   setup_SERIAL();
   setup_LOGG(LOGG1);
-  setup_LOGG(LOGG2);
+  //setup_LOGG(LOGG2);
   if(debugging)
   {
     DEBUG.println("WolfSat RTOS");
+    delay(20);
     dubLog(1);
   }    
   else
     dubLog(2);
     
-  setup_IMU();
+  //setup_IMU();
   if(debugging)
     dubLog(4);
     
-  setup_TMP102(innerTemp1, tmp1Dat);
+  //setup_TMP102(innerTemp1, tmp1Dat);
   if(debugging)
     dubLog(3);
 
@@ -108,8 +110,8 @@ void setup_SERIAL()
   if(debugging)
     DEBUG.begin(DEBUG_SPEED);
   LOGG1.begin(OPLOG_SPEED);
-  LOGG2.begin(OPLOG_SPEED);
-  PARTI.begin(PARTI_SPEED);
+  //LOGG2.begin(OPLOG_SPEED);
+  //PARTI.begin(PARTI_SPEED);
 }
 
 
@@ -163,34 +165,41 @@ template <typename type> void setup_TMP102(TMP102& in_TMP, DataSet<type>& in_set
 
 void loop() 
 {
-  run_IMU();
-  outSet(imuDat);
-  run_TMP(innerTemp1, tmp1Dat);
-  outSet(tmp1Dat);
-  delay(1000);
-  
+  //run_IMU();
+  //outSet(imuDat);
+  //run_TMP(innerTemp1, tmp1Dat);
+  //outSet(tmp1Dat);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(45);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(45);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(45);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(360);  
   DEBUG.println("Done...");
+  Serial.flush();
 }
 
 
 void dubLog(int in_CMD)
 {
   oLog_logCMD(LOGG1, in_CMD);
-  oLog_logCMD(LOGG2, in_CMD);
+  //oLog_logCMD(LOGG2, in_CMD);
 }
 
 
 void dubLog(String in_file, String in_string)
 {
   oLog_append(LOGG1, in_file, in_string);
-  oLog_append(LOGG2, in_file, in_string);
+  //oLog_append(LOGG2, in_file, in_string);
 }
 
 
 template<typename type> void dubLog(String in_file, DataSet<type> in_set)
 {
   oLog_append(LOGG1, in_file, in_set);
-  oLog_append(LOGG2, in_file, in_set);
+  //oLog_append(LOGG2, in_file, in_set);
 }
 
 
@@ -319,6 +328,7 @@ void oLog_changeFile(HardwareSerial& in_serial, String in_name)
   {
     DEBUG.print("OLOG :: ACTIVE LOG ");
     DEBUG.println(activeLog);
+    delay(20);
   }
 }
 
@@ -335,10 +345,21 @@ void oLog_logCMD(HardwareSerial& in_serial, int in_CMD)
   if(activeLog != LOG_CMD)
   {
     oLog_changeFile(in_serial, LOG_CMD);
+    if (debugging)
+    {
+      DEBUG.println("OLOG :: NOT COMMAND LOG");
+      delay(20);      
+    }
+      
   }
   in_serial.println(toLog);
+  delay(20);
   if (debugging)
-    DEBUG.println("OLOG :: COMMAND LOGGED");
+  {
+    DEBUG.print("OLOG :: ");
+    DEBUG.println(toLog);
+    delay(20);
+  }
 }
 
 
@@ -367,6 +388,7 @@ String oLog_verboseSwitch(int in_CMD)
       break;
     default:
       toRet = "UNKNOWN CMD";
+      break;
   }
   return toRet;
 }
