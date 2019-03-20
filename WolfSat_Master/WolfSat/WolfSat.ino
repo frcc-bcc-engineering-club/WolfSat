@@ -93,18 +93,22 @@ int dp_ATM;
 void setup() 
 {
   pinMode(LED_BUILTIN, OUTPUT);
-
-  setup_VARS();
+  debugging = true;  // <<<<<< Could be pin controlled...<<<<<<<<<
+  verboseDebug = true;  // Same here...
+  cmdCount = 0;
+  
+  activeLog = "boot";
   setup_SERIAL();
   setup_LOGG(LOGG1);
   //setup_LOGG(LOGG2);
-  
   if(debugging)
   {
+    DEBUG.println("WolfSat RTOS");
+    delay(20);
     dubLog(1);
   }    
   else
-    dubLog(2); 
+    dubLog(2);
     
   //setup_IMU();
   if(debugging)
@@ -120,41 +124,21 @@ void setup()
 }
 
 
-void setup_VARS()
-{
-  debugging = true;  // <<<<<< Could be pin controlled...<<<<<<<<<
-  verboseDebug = true;  // Same here...
-  cmdCount = 0;
-  activeLog = "setup";
-  hour = 0;
-  minute = 0;
-  second = 0;
-  mil = millis();
-  lastMil = mil;
-  dp_CMD = 0;
-  dp_TMP = 0;
-  dp_IMU = 0;
-  dp_PAR = 0;
-  dp_RAD = 0;
-  dp_ATM = 0;
-}
-
-
 void setup_SPS30()
 {
   sps30.EnableDebugging(SPS30_DEBUG);
   if ((sps30.begin(SERIALPORT2) == false)&&(debugging))
-    DEBUG.println("SPS  :: COMM INIT FAILED");
+    DEBUG.println("SPS :: COMM INIT FAILED");
   if ((sps30.probe() == false)&&(debugging))
-    DEBUG.println("SPS  :: PROBE INIT FAILED");
+    DEBUG.println("SPS :: PROBE INIT FAILED");
   else if (debugging)
-    DEBUG.println("SPS  :: PROBE INIT SUCCESS");
+    DEBUG.println("SPS :: PROBE INIT SUCCESS");
   if ((sps30.reset() == false)&&(debugging))
-    DEBUG.println("SPS  :: RESET FAIL");
+    DEBUG.println("SPS :: RESET FAIL");
   if ((sps30.start() == true)&&(debugging))
-    DEBUG.println("SPS  :: BEGINNING MEASUREMENT");
+    DEBUG.println("SPS :: BEGINNING MEASUREMENT");
   else if(debugging)
-    DEBUG.println("SPS  :: MEASUREMENT FAILURE");
+    DEBUG.println("SPS :: MEASUREMENT FAILURE");
 
   sps30Dat = DataSet<double>(LIM_SPS30);
 }
@@ -163,10 +147,7 @@ void setup_SPS30()
 void setup_SERIAL()
 {
   if(debugging)
-  {
     DEBUG.begin(DEBUG_SPEED);
-    DEBUG.println("WOLFSAT RTOS");
-  }
   LOGG1.begin(OPLOG_SPEED);
   //LOGG2.begin(OPLOG_SPEED);
   PARTI.begin(PARTI_SPEED);
@@ -463,9 +444,9 @@ template <typename type> void oLog_append(HardwareSerial& in_serial, String in_f
   
   if(debugging)
   {
-    DEBUG.print("OLOG :: FILE APPENDED ");
+    DEBUG.print("OLOG::FILE APPENDED ");
     DEBUG.print(in_file);
-    DEBUG.println(" WITH DATASET");
+    DEBUG.print(" WITH DATASET");
   }
 }
 
@@ -493,7 +474,7 @@ void oLog_changeFile(HardwareSerial& in_serial, String in_name)
 
 void oLog_logCMD(HardwareSerial& in_serial, int in_CMD)
 {
-  String toLog = "CMD :: ";
+  String toLog = "CMD::";
   toLog.concat((String)cmdCount);
   toLog.concat(" - ");
   if(verboseDebug)
