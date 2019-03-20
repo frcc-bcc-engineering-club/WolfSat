@@ -32,14 +32,14 @@
 
 // Static consts for DataSets
 #define LOG_CMD "LOG_CMD" // Coulomb counter included here...
-#define LOG_TMP "LOG_TMP" // all TMP102
+#define LOG_TMP "LOG_TMP" // all TMP102, maybe tmp36
 #define LOG_IMU "LOG_IMU" // IMU
 #define LOG_PAR "LOG_PAR" // Particulates
 #define LOG_RAD "LOG_RAD" // Geiger
-#define LOG_ATM "LOG_ATM" // Pressure, humidity, TMP36, CO2, CH4
+#define LOG_ATM "LOG_ATM" // Pressure, humidity, maybe TMP36, CO2, CH4
 
 #define LIM_IMU 9
-#define LIM_TMP 1
+#define LIM_TMP 3
 #define LIM_SPS30 10
 
 // Static consts for others
@@ -68,12 +68,27 @@ bool debugging;
 bool verboseDebug;
 int cmdCount;
 String activeLog;
+int hour;
+int minute;
+int second;
+long mil;
+long lastMil;
 DataSet<double> imuDat;
-DataSet<double> tmp1Dat;
+DataSet<double> tmpDat;
 DataSet<double> sps30Dat;
 LSM9DS1 imu;
 TMP102 innerTemp1(0x48);
 SPS30 sps30;
+// Global Vars for datapoint tracking
+int dp_CMD;
+int dp_TMP;
+int dp_IMU;
+int dp_PAR;
+int dp_RAD;
+int dp_ATM;
+
+// Temp pin consts
+#define PIN_TMP36 0
 
 void setup() 
 {
@@ -183,12 +198,13 @@ template <typename type> void setup_TMP102(TMP102& in_TMP, DataSet<type>& in_set
   in_TMP.setExtendedMode(0);
   in_TMP.setHighTempC(HIGH_TEMP);
   in_TMP.setLowTempC(LOW_TEMP);
-  in_set = DataSet<double>(LIM_TMP);
+  in_set = DataSet<double>(LIM_TMP); // Also initializes dataSet used for TMP36
 }
 
 
 void loop() 
 {
+  incTime();
   //run_IMU();
   //outSet(imuDat);
   //run_TMP(innerTemp1, tmp1Dat);
@@ -205,8 +221,52 @@ void loop()
   run_SPS30();
   outSet(sps30Dat);
   dubLog(LOG_PAR, sps30Dat);
+
+  if(debugging)
+    DEBUG.println();
+
+  run_TMP36();
+  run_TMP102(innerTemp1);
+  if(debugging)
+    outSet(tmpDat);
+  dubLog(LOG_TMP, tmpDat);  
+  
   delay(2505);
   DEBUG.println("Done...");
+}
+
+
+void incTime()
+{
+  mil = millis();
+  if((mil >= (lastMil + 1000)) || (mil <= (lastMil - 1000)))
+  {
+    if(mil >= (lastMil + 2000))
+    {
+      while (mil >= (lastMil + 1000))
+      {
+        second++;
+        mil -= 1000;
+      }
+    }
+    else
+      second++;
+    lastMil = mil;
+    if(second >= 60)
+    {
+      while(second >= 60)
+      {
+        minute++;
+        second -= 60;
+      }
+      if(minute >= 60)
+      while(minute >= 60)
+      {
+        hour++;
+        minute -= 60;
+      }
+    }
+  }
 }
 
 
@@ -252,16 +312,33 @@ template<typename type> void outSet(DataSet<type>& in_set)
 }
 
 
-template <typename type> void run_TMP(TMP102& in_TMP, DataSet<type>& in_set)
+void run_TMP36()
+{
+  int reading = analogRead(PIN_TMP36);
+  double voltage = reading * 5.0;
+  voltage /= 1024.0;
+  double tempC = (voltage - 0.5) * 100;
+  fill_tmpDat(voltage, tempC);
+}
+
+
+void fill_tmpDat(double in_voltage, double in_tempC)
+{
+  tmpDat.set_data(in_voltage);
+  tmpDat.set_data(in_tempC);
+}
+
+
+void run_TMP102(TMP102& in_TMP)
 {
   in_TMP.wakeup();
-  fill_tmpDat(in_TMP, in_set);
+  fill_tmpDat(in_TMP);
   in_TMP.sleep();
 }
 
-template<typename type> void fill_tmpDat(TMP102& in_TMP, DataSet<type>& in_set)
+void fill_tmpDat(TMP102& in_TMP)
 {
-  in_set.set_data(in_TMP.readTempC());
+  tmpDat.set_data(in_TMP.readTempC());
 }
 
 
