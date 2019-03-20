@@ -12,12 +12,10 @@
 
  // WolfSat_lib inclusion
 #include <DataSet.h>
-#include <sensirion_arch_config.h>
-#include <sensirion_shdlc.h>
-#include <sensirion_uart.h>
+
 
 // External sensor libraries
-#include <sps30.h>
+#include "sps30.h"
 #include <unistd.h>
 #include <SparkFunTMP102.h>
 #include <LSM9DS1_Registers.h>
@@ -30,6 +28,7 @@
 #define LSM9DS1_AG  0x6B // Would be 0x6A if SDO_AG is LOW
 #define HIGH_TEMP 50
 #define LOW_TEMP 49
+#define SPS30_DEBUG 0 // Can be changed to get debug info, 0 is none
 
 // Static consts for DataSets
 #define LOG_CMD "LOG_CMD" // Coulomb counter included here...
@@ -41,11 +40,12 @@
 
 #define LIM_IMU 9
 #define LIM_TMP 1
+#define LIM_SPS30 10
 
 // Static consts for others
-#define DEBUG_SPEED 9600
+#define DEBUG_SPEED 115200
 #define OPLOG_SPEED 9600
-#define PARTI_SPEED 9600 // Check datasheet <<<<<<<<<<<<<<<<<<<<<<<
+#define PARTI_SPEED 115200
 #define NULLSTR " "
 
 // Preprocesor directives
@@ -70,8 +70,10 @@ int cmdCount;
 String activeLog;
 DataSet<double> imuDat;
 DataSet<double> tmp1Dat;
+DataSet<double> sps30Dat;
 LSM9DS1 imu;
 TMP102 innerTemp1(0x48);
+SPS30 sps30;
 
 void setup() 
 {
@@ -101,7 +103,29 @@ void setup()
   if(debugging)
     dubLog(3);
 
-  
+  setup_SPS30();
+  if (debugging)
+    dubLog(6);
+}
+
+
+void setup_SPS30()
+{
+  sps30.EnableDebugging(SPS30_DEBUG);
+  if ((sps30.begin(SERIALPORT2) == false)&&(debugging))
+    DEBUG.println("SPS :: COMM INIT FAILED");
+  if ((sps30.probe() == false)&&(debugging))
+    DEBUG.println("SPS :: PROBE INIT FAILED");
+  else if (debugging)
+    DEBUG.println("SPS :: PROBE INIT SUCCESS");
+  if ((sps30.reset() == false)&&(debugging))
+    DEBUG.println("SPS :: RESET FAIL");
+  if ((sps30.start() == true)&&(debugging))
+    DEBUG.println("SPS :: BEGINNING MEASUREMENT");
+  else if(debugging)
+    DEBUG.println("SPS :: MEASUREMENT FAILURE");
+
+  sps30Dat = DataSet<double>(LIM_SPS30);
 }
 
 
@@ -111,7 +135,7 @@ void setup_SERIAL()
     DEBUG.begin(DEBUG_SPEED);
   LOGG1.begin(OPLOG_SPEED);
   //LOGG2.begin(OPLOG_SPEED);
-  //PARTI.begin(PARTI_SPEED);
+  PARTI.begin(PARTI_SPEED);
 }
 
 
@@ -139,7 +163,7 @@ void setup_IMU()
     {
       DEBUG.println("Failed to communicate with LSM9DS1.");
       DEBUG.println("Looping to infinity.");
-      while (1);
+//      while (1);
     }
   }
   
@@ -176,9 +200,13 @@ void loop()
   digitalWrite(LED_BUILTIN, HIGH);
   delay(45);
   digitalWrite(LED_BUILTIN, LOW);
-  delay(360);  
+  delay(360); 
+   
+  run_SPS30();
+  outSet(sps30Dat);
+  dubLog(LOG_PAR, sps30Dat);
+  delay(2505);
   DEBUG.println("Done...");
-  Serial.flush();
 }
 
 
@@ -209,10 +237,18 @@ template<typename type> void outSet(DataSet<type>& in_set)
   int pos = 0;
   while(pos < lim)
   {
+
     String toWrite = (String)in_set.get_data(pos);
-    pos++;
+    DEBUG.print((String)pos);
+    DEBUG.print(" of ");
+    DEBUG.print((String)lim);
+    DEBUG.print(" ");      
     DEBUG.println(toWrite);
-  }
+    pos++;      
+    delay(20);
+    //DEBUG.flush();
+  } 
+  //in_set.reset();
 }
 
 
@@ -249,6 +285,32 @@ void fill_imuDat()
   imuDat.set_data(imu.calcMag(imu.mx));
   imuDat.set_data(imu.calcMag(imu.my));
   imuDat.set_data(imu.calcMag(imu.mz));
+}
+
+
+bool run_SPS30()
+{
+  struct sps_values loc;
+  uint8_t check, errCnt = 0;
+  sps30.GetValues(&loc);
+  fill_sps30Dat(loc);
+}
+
+
+void fill_sps30Dat(sps_values& in_data)
+{
+  sps30Dat.reset();
+  sps30Dat.set_data(in_data.MassPM1);
+  sps30Dat.set_data(in_data.MassPM2);
+  sps30Dat.set_data(in_data.MassPM4);
+  sps30Dat.set_data(in_data.MassPM10);
+  sps30Dat.set_data(in_data.NumPM0);
+  sps30Dat.set_data(in_data.NumPM1);
+  sps30Dat.set_data(in_data.NumPM2);
+  sps30Dat.set_data(in_data.NumPM4);
+  sps30Dat.set_data(in_data.NumPM10);
+  sps30Dat.set_data(in_data.PartSize);
+  
 }
 
 
@@ -385,6 +447,9 @@ String oLog_verboseSwitch(int in_CMD)
       break;
     case 5:
       toRet = "TMP36 SETUP";
+      break;
+    case 6:
+      toRet = "SPS30 SETUP";
       break;
     default:
       toRet = "UNKNOWN CMD";
