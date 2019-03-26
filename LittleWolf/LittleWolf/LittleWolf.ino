@@ -1,22 +1,28 @@
-int received;
-
+bool passed;
 void setup() 
 {
+  passed = false;
   Serial.begin(115200);
-  pinMode(13, OUTPUT);
-  Serial.println("Listen up little wolf");
+  pinMode(7, OUTPUT);
+  digitalWrite(7, HIGH);
+
+  Serial.println(":: LittleWolf Listener ::");
   Serial.flush();
   // put your setup code here, to run once:
 }
 
 void loop() 
 {
-  Serial.flush();
-  if(Serial.available() > 0)
+  if (Serial.available() > 0)
   {
-    String toPrint = Serial.readStringUntil('\r');
-    Serial.print(toPrint);
-  } 
-  // put your main code here, to run repeatedly:
+    String local = Serial.readStringUntil('\r');
+    if((passed == false)&&(local == "Listen up LittleWolf"))
+    {
+      Serial.println("I'm listening...");
+      passed = true;
+    }
+    
+    Serial.print(local);
+  }
 
 }

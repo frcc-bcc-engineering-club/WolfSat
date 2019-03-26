@@ -10,8 +10,6 @@
  * By James Craft, and hopefully others...
  */
 
- // This version was working
-
  // WolfSat_lib inclusion
 #include <DataSet.h>
 
@@ -25,6 +23,7 @@
 #include <SparkFunLSM9DS1.h>
 //#include <SparkFun_Qwiic_OpenLog_Arduino_Library.h>
 #include "SparkFun_SCD30_Arduino_Library.h" 
+#include <SparkFun_HIH4030.h>
 #include <Wire.h>
 
 // Static consts for external sensors
@@ -33,7 +32,15 @@
 #define HIGH_TEMP 50
 #define LOW_TEMP 49
 #define SPS30_DEBUG 0 // Can be changed to get debug info, 0 is none
-#define SCD30_RDY 13
+#define HIH4030_VCC 5 // Operating at optimal 5v
+#define SCD30_RDY 12
+#if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#define HIH4030_PIN A15
+#else
+#define HIH4030_PIN A0
+#endif
+#define PIN_TMP36 A1
+
 
 // Static consts for DataSets
 #define LOG_CMD "LOG_CMD" // Coulomb counter included here...
@@ -43,10 +50,14 @@
 #define LOG_RAD "LOG_RAD" // Geiger
 #define LOG_ATM "LOG_ATM" // Pressure, humidity, maybe TMP36, CO2, CH4
 
+#define TIME_POINTS 4
+#define DATA_POINT 1
 #define LIM_IMU 9
-#define LIM_TMP 3
+#define LIM_TMP 4
 #define LIM_SPS30 10
 #define LIM_ATM 4
+#define LIM_RAD 4
+
 
 // Static consts for others
 #define DEBUG_SPEED 115200
@@ -87,6 +98,7 @@ LSM9DS1 imu;
 TMP102 innerTemp1(0x48);
 SPS30 sps30;
 SCD30 scd30;
+HIH4030 hih4030(HIH4030_PIN, HIH4030_VCC); // No other setup required for this sensor
 
 // Global Vars for datapoint tracking
 int dp_CMD;
@@ -96,8 +108,8 @@ int dp_PAR;
 int dp_RAD;
 int dp_ATM;
 
-// Temp pin consts
-#define PIN_TMP36 0
+// Special debug
+#define PIN_DBG 7
 
 void setup() 
 {
@@ -105,6 +117,8 @@ void setup()
   setup_VARS();
   setup_DATASETS();
   setup_SERIAL();
+  //delay(100);
+  setup_DEBUG();
   setup_LOGG(LOGG1);
   //setup_LOGG(LOGG2);
   
@@ -128,23 +142,55 @@ void setup()
     dubLog(6);
 
   setup_SCD30();
-  
+  if (debugging)
+    dubLog(7);  
 }
 
 
 void setup_PINS()
 {
+  pinMode(PIN_DBG, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(SCD30_RDY, INPUT);
 }
 
 
+void setup_DEBUG()
+{
+  if(digitalRead(PIN_DBG) == HIGH)
+  {
+    debugging = true;
+    //DEBUG.println("Hello!");
+    int cnt = millis();
+    int lim = cnt + 5000;
+    while(true)
+    {      
+      DEBUG.println("Listen up LittleWolf");
+      //DEBUG.flush();
+      //delay(20);
+      if(DEBUG.available() > 0)
+      {
+        if(DEBUG.readStringUntil('\r') == "I'm listening...")
+        {
+          DEBUG.println("Hello LittleWolf...");
+          break;
+        }
+      }
+      else
+      {
+        cnt = millis();
+      }
+  }
+  }
+}
+
+
 void setup_DATASETS()
 {
-  sps30Dat = DataSet<double>(LIM_SPS30);
-  imuDat = DataSet<double>(LIM_IMU);
-  tmpDat = DataSet<double>(LIM_TMP); // Also initializes dataSet used for TMP36
-  atmDat = DataSet<double>(LIM_ATM);
+  sps30Dat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_SPS30);
+  imuDat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_IMU);
+  tmpDat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_TMP); // Also initializes dataSet used for TMP36
+  atmDat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_ATM);
 }
 
 
@@ -170,7 +216,20 @@ void setup_VARS()
 
 void setup_SCD30()
 {
-  scd30.begin();
+  if(!scd30.begin())
+  {
+    if(debugging)
+    {
+      DEBUG.println("SCD30 :: INIT FAILURE");  
+    }    
+  }
+  else
+  {
+    if(debugging)
+      DEBUG.println("SCD30 :: INIT SUCCESS");
+    //scd30.beginMeasuring();
+
+  }
 }
 
 
@@ -253,61 +312,29 @@ void loop()
 {
   incTime();
   
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(45);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(45);
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(45);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(360); 
 
   sps30Dat.reset();
   run_SPS30();
-  if(debugging)
-  {
-    DEBUG.println("PARTICULATE OUTSET");
-    outSet(sps30Dat);
-  }
   dubLog(LOG_PAR, sps30Dat);
 
   tmpDat.reset();
   run_TMP36();
   run_TMP102(innerTemp1);
-  if(debugging)
-  {
-    DEBUG.println("TMP OUTSET");
-    outSet(tmpDat);
-  }
   dubLog(LOG_TMP, tmpDat);
     
   atmDat.reset();
-  if(digitalRead(SCD30_RDY) == HIGH)
-  {
-    run_SCD30();
-    if(debugging)
-    {
-      DEBUG.println("ATM OUTSET");
-      dubLog(LOG_ATM, atmDat);
-      outSet(atmDat);    
-    }    
-  }
-  else if(debugging)
-  {
-    DEBUG.println("SCD30 :: NOT READY");
-  }
+  run_SCD30();
+  run_HIH4030();
 
   imuDat.reset();
   run_IMU();
+  dubLog(LOG_IMU, imuDat);
+
   if(debugging)
-  {
-    DEBUG.println("IMU OUTSET");
-    outSet(imuDat);
+    bigOuts();
     
-  }
-    
-  delay(2505);
   DEBUG.println("Done...");
+  delay(2505);
 }
 
 
@@ -326,7 +353,7 @@ void incTime()
     }
     else
       second++;
-    lastMil = mil;
+    lastMil = millis();
     if(second >= 60)
     {
       while(second >= 60)
@@ -367,6 +394,124 @@ template<typename type> void dubLog(String in_file, DataSet<type> in_set)
 }
 
 
+void bigOuts()
+{
+  DEBUG.println("WOLFSAT RTOS");
+  DEBUG.println();
+  DEBUG.println(timeOuts());
+  DEBUG.println(particulatesOuts());
+  DEBUG.println(tmpOuts());
+  DEBUG.println(imuOuts());
+  DEBUG.println(atmOuts());
+
+  int pos = 0;
+  int lim = 8;
+  while (pos < lim)
+  {
+    DEBUG.println();
+    pos++;
+  }
+}
+
+
+String timeOuts()
+{
+  String toRet = "Time : ";
+  toRet.concat(hour);
+  toRet.concat(":");
+  toRet.concat(minute);
+  toRet.concat(":");
+  toRet.concat(second);
+  toRet.concat(":");
+  toRet.concat(mil);
+  toRet.concat(" actual millis : ");
+  toRet.concat(mil);
+  toRet.concat(" actual lastMil : ");
+  toRet.concat(lastMil);
+  return toRet;
+}
+
+
+String particulatesOuts()
+{
+  String toRet = "Particulates : m1: ";
+  toRet.concat(sps30Dat.get_data(0));
+  toRet.concat(" m2: ");
+  toRet.concat(sps30Dat.get_data(1));
+  toRet.concat(" m4: ");
+  toRet.concat(sps30Dat.get_data(2));
+  toRet.concat(" m10: ");
+  toRet.concat(sps30Dat.get_data(3));
+  toRet.concat(" n0: ");
+  toRet.concat(sps30Dat.get_data(4));
+  toRet.concat(" n1: ");
+  toRet.concat(sps30Dat.get_data(5));
+  toRet.concat(" n2: ");
+  toRet.concat(sps30Dat.get_data(6));
+  toRet.concat(" n4: ");
+  toRet.concat(sps30Dat.get_data(7));
+  toRet.concat(" n10: ");
+  toRet.concat(sps30Dat.get_data(8));
+  toRet.concat(" size: ");
+  toRet.concat(sps30Dat.get_data(9));
+  return toRet;
+}
+
+
+String tmpOuts()
+{
+  String toRet = "Temperatures : Ext: ";
+  toRet.concat(tmpDat.get_data(0));
+  toRet.concat(" In1: ");
+  toRet.concat(tmpDat.get_data(1));
+  toRet.concat(" In2: ");
+  toRet.concat(tmpDat.get_data(2));
+  toRet.concat(" In3: ");
+  toRet.concat(tmpDat.get_data(3));
+  return toRet;
+}
+
+
+String imuOuts()
+{
+  String toRet = "Motions : Ax: ";
+  toRet.concat(imuDat.get_data(0));
+  toRet.concat(" Ay: ");
+  toRet.concat(imuDat.get_data(1));
+  toRet.concat(" Az: ");
+  toRet.concat(imuDat.get_data(2));
+  toRet.concat(" Rx: ");
+  toRet.concat(imuDat.get_data(3));
+  toRet.concat(" Ry: ");
+  toRet.concat(imuDat.get_data(4));
+  toRet.concat(" Rz: ");
+  toRet.concat(imuDat.get_data(5));
+  toRet.concat(" Mx: ");
+  toRet.concat(imuDat.get_data(6));
+  toRet.concat(" My: ");
+  toRet.concat(imuDat.get_data(7));
+  toRet.concat(" Mz: ");
+  toRet.concat(imuDat.get_data(8));
+  return toRet;
+}
+
+
+String atmOuts()
+{
+  String toRet = "Atmosphere : CO2: ";
+  toRet.concat(atmDat.get_data(0));
+  toRet.concat(" CO2 rh: ");
+  toRet.concat(atmDat.get_data(1));
+  toRet.concat(" CO2 Tmp: ");
+  toRet.concat(atmDat.get_data(2));
+  toRet.concat(" RH : ");
+  toRet.concat(atmDat.get_data(3));
+  toRet.concat(" Pressure: ");
+  toRet.concat(atmDat.get_data(4));
+  return toRet;
+}
+
+
 template<typename type> void outSet(DataSet<type>& in_set)
 {
   DEBUG.println("DEBUG :: OUT SET");
@@ -397,23 +542,45 @@ template<typename type> void outSet(DataSet<type>& in_set)
 }
 
 
+void run_HIH4030()
+{
+  double val = hih4030.getSensorRH();
+  atmDat.set_data(val);
+  if(debugging)
+  {
+    DEBUG.println("HIH4030 :: DATA LOGGED");
+  }
+}
+
+
 void run_SCD30()
 {
-  if(scd30.dataAvailable())
+  double co2 = 0;
+  double locTemp = 0;
+  double rh = 0;
+  if (digitalRead(SCD30_RDY) == HIGH)
   {
+    if(scd30.dataAvailable())
+    {
+      co2 = scd30.getCO2();
+      locTemp = scd30.getTemperature();
+      rh = scd30.getHumidity();
+      atmDat.set_data(co2);
+      atmDat.set_data(locTemp);
+      atmDat.set_data(rh);
+    }
+    else if (debugging)
+    {
+      DEBUG.println("SCD30 :: DATA UNAVAILABLE");
+    }    
+  }
+  else
     if(debugging)
-      DEBUG.println("SCD30 :: READING DATA");
-    double co2 = scd30.getCO2();
-    double locTemp = scd30.getTemperature();
-    double rh = scd30.getHumidity();
-    atmDat.set_data(co2);
-    atmDat.set_data(locTemp);
-    atmDat.set_data(rh);
-  }
-  else if (debugging)
-  {
-    DEBUG.println("SCD30 :: DATA UNAVAILABLE");
-  }
+      DEBUG.println("SCD30 :: DATA NOT READY");
+
+  atmDat.set_data(co2);
+  atmDat.set_data(locTemp);
+  atmDat.set_data(rh);
 }
 
 
@@ -523,13 +690,13 @@ void oLog_append(HardwareSerial& in_serial, String in_file, String in_string)
   in_serial.println(in_string);
   delay(20);
   oLog_changeFile(in_serial, LOG_CMD);
-  if(debugging)
-  {
-    DEBUG.print("OLOG :: FILE APPENDED ");
-    DEBUG.print(in_file);
-    DEBUG.print(" ");
-    DEBUG.println(in_string);
-  }
+//  if(debugging)
+//  {
+//    DEBUG.print("OLOG :: FILE APPENDED ");
+//    DEBUG.print(in_file);
+//    DEBUG.print(" ");
+//    DEBUG.println(in_string);
+//  }
 }
 
 
@@ -546,12 +713,12 @@ template <typename type> void oLog_append(HardwareSerial& in_serial, String in_f
   }
   oLog_changeFile(in_serial, LOG_CMD);
   
-  if(debugging)
-  {
-    DEBUG.print("OLOG :: FILE APPENDED ");
-    DEBUG.print(in_file);
-    DEBUG.println(" WITH DATASET");
-  }
+//  if(debugging)
+//  {
+//    DEBUG.print("OLOG :: FILE APPENDED ");
+//    DEBUG.print(in_file);
+//    DEBUG.println(" WITH DATASET");
+//  }
 }
 
 
@@ -567,12 +734,12 @@ void oLog_changeFile(HardwareSerial& in_serial, String in_name)
   delay(10);
   oLog_exitCMD(in_serial);
   activeLog = in_name;
-  if (debugging)
-  {
-    DEBUG.print("OLOG :: ACTIVE LOG ");
-    DEBUG.println(activeLog);
-    delay(20);
-  }
+//  if (debugging)
+//  {
+//    DEBUG.print("OLOG :: ACTIVE LOG ");
+//    DEBUG.println(activeLog);
+//    delay(20);
+//  }
 }
 
 
@@ -597,12 +764,12 @@ void oLog_logCMD(HardwareSerial& in_serial, int in_CMD)
   }
   in_serial.println(toLog);
   delay(20);
-  if (debugging)
-  {
-    DEBUG.print("OLOG :: ");
-    DEBUG.println(toLog);
-    delay(20);
-  }
+//  if (debugging)
+//  {
+//    DEBUG.print("OLOG :: ");
+//    DEBUG.println(toLog);
+//    delay(20);
+//  }
 }
 
 
@@ -631,6 +798,9 @@ String oLog_verboseSwitch(int in_CMD)
       break;
     case 6:
       toRet = "SPS30 SETUP";
+      break;
+    case 7:
+      toRet = "SCD30 SETUP";
       break;
     default:
       toRet = "UNKNOWN CMD";
