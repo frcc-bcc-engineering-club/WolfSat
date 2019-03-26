@@ -590,13 +590,13 @@ void run_TMP36()
   double voltage = reading * 5.0;
   voltage /= 1024.0;
   double tempC = (voltage - 0.5) * 100;
-  fill_tmpDat(voltage, tempC);
+  fill_tmpDat(tempC);
 }
 
 
-void fill_tmpDat(double in_voltage, double in_tempC)
+void fill_tmpDat(double in_tempC)
 {
-  tmpDat.set_data(in_voltage);
+  //tmpDat.set_data(in_voltage);
   tmpDat.set_data(in_tempC);
 }
 
