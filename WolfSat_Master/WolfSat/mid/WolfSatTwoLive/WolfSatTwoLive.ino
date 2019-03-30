@@ -76,6 +76,8 @@
 #define OPLOG_SPEED 9600
 #define PARTI_SPEED 115200
 #define NULLSTR " "
+#define TYPE_TXT ".txt"
+#define TYPE_CSV ".csv"
 
 // Preprocesor directives
 #if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -308,12 +310,12 @@ void setup_LOGG(HardwareSerial& in_serial)
 {
   if(debugging)
     DEBUG.println("SETTING UP OPENLOG");
-  oLog_append(in_serial, LOG_CMD, LOG_CMD);
-  oLog_append(in_serial, LOG_TMP, LOG_TMP);
-  oLog_append(in_serial, LOG_IMU, LOG_IMU);
-  oLog_append(in_serial, LOG_PAR, LOG_PAR);
-  oLog_append(in_serial, LOG_RAD, LOG_RAD);
-  oLog_append(in_serial, LOG_ATM, LOG_ATM);
+  oLog_append(in_serial, LOG_CMD, TYPE_CSV, LOG_CMD);
+  oLog_append(in_serial, LOG_TMP, TYPE_CSV, LOG_TMP);
+  oLog_append(in_serial, LOG_IMU, TYPE_CSV, LOG_IMU);
+  oLog_append(in_serial, LOG_PAR, TYPE_CSV, LOG_PAR);
+  oLog_append(in_serial, LOG_RAD, TYPE_CSV, LOG_RAD);
+  oLog_append(in_serial, LOG_ATM, TYPE_CSV, LOG_ATM);
   oLog_logCMD(in_serial, 0);
 }
 
@@ -444,10 +446,10 @@ void dubLog(int in_CMD)
 }
 
 
-void dubLog(String in_file, String in_string)
+void dubLog(String in_file, String in_type, String in_string)
 {
-  oLog_append(LOGG1, in_file, in_string);
-  //oLog_append(LOGG2, in_file, in_string);
+  oLog_append(LOGG1, in_file, in_type, in_string);
+  //oLog_append(LOGG2, in_file, in_type, in_string);
 }
 
 
@@ -759,7 +761,7 @@ void oLog_exitCMD(HardwareSerial& in_serial)
 }
 
 
-void oLog_append(HardwareSerial& in_serial, String in_file, String in_string)
+/*void oLog_append(HardwareSerial& in_serial, String in_file, String in_string)
 {
   oLog_changeFile(in_serial, in_file);
   in_serial.println(in_string);
@@ -773,8 +775,43 @@ void oLog_append(HardwareSerial& in_serial, String in_file, String in_string)
 //    DEBUG.println(in_string);
 //  }
 }
+*/
 
 
+void oLog_append(HardwareSerial& in_serial, String in_file, String in_type, String in_header)
+{
+//  String theFile = in_file;
+//  theFile.concat(in_type);
+  oLog_changeFile(in_serial, in_file, in_type);
+  in_serial.println(in_header);
+  oLog_changeFile(in_serial, LOG_CMD, TYPE_TXT);
+}
+
+template<typename type> void oLog_append(HardwareSerial& in_serial, String in_file, DataSet<type> in_set)
+{
+  oLog_changeFile(in_serial, in_file, TYPE_CSV);
+  String toLog = oLog_formatCSV(in_set);
+  in_serial.println(toLog);
+  oLog_changeFile(in_serial, LOG_CMD, TYPE_TXT);
+}
+
+
+template <typename type> String oLog_formatCSV(DataSet<type> in_set)
+{
+  int pos = 0;
+  int lim = in_set.get_size();
+  String toRet = "";
+  while (pos < lim)
+  {
+    String loc = (String)in_set.get_data(pos);
+    loc.concat(", ");
+    toRet.concat(loc);
+    pos++;
+  }
+  return toRet;
+}
+
+/*
 template <typename type> void oLog_append(HardwareSerial& in_serial, String in_file, DataSet<type> in_set)
 {
   oLog_changeFile(in_serial, in_file);
@@ -796,11 +833,13 @@ template <typename type> void oLog_append(HardwareSerial& in_serial, String in_f
 //  }
 }
 
+*/
 
-void oLog_changeFile(HardwareSerial& in_serial, String in_name)
+
+void oLog_changeFile(HardwareSerial& in_serial, String in_name, String in_type)
 {
   String root = "append ";
-  String fileType = ".txt";
+  String fileType = in_type;
   String changeTo = root;
   changeTo.concat(in_name);
   changeTo.concat(fileType);
@@ -829,7 +868,7 @@ void oLog_logCMD(HardwareSerial& in_serial, int in_CMD)
     toLog.concat((String)oLog_nonVerboseSwitch(in_CMD));
   if(activeLog != LOG_CMD)
   {
-    oLog_changeFile(in_serial, LOG_CMD);
+    oLog_changeFile(in_serial, LOG_CMD, TYPE_TXT);
     if (debugging)
     {
       DEBUG.println("OLOG :: NOT COMMAND LOG");
