@@ -143,22 +143,38 @@ void setup()
   }    
   else
     dubLog(2); 
-    
+
+  if (debugging)
+    DEBUG.println("SETUP :: SETTING UP IMU...");
   setup_IMU();
   if(debugging)
+  {
     dubLog(4);
-    
+  }
+
+  if(debugging)
+    DEBUG.println("SETUP :: SETTING UP TMP102...");
   setup_TMP102(innerTemp1);
   if(debugging)
+  {
     dubLog(3);
+  }
 
+  if(debugging)
+    DEBUG.println("SETUP :: SETTING UP SPS30...");
   setup_SPS30();
   if (debugging)
+  {
     dubLog(6);
+  }
 
+  if(debugging)
+    DEBUG.println("SETUP :: SETTING UP SCD30...");
   setup_SCD30();
   if (debugging)
+  {
     dubLog(7);  
+  }
 }
 
 
@@ -202,6 +218,8 @@ void setup_DEBUG()
 
 void setup_DATASETS()
 {
+  if(debugging)
+    DEBUG.println("SETTING UP DATASETS...");
   sps30Dat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_SPS30);
   imuDat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_IMU);
   tmpDat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_TMP); // Also initializes dataSet used for TMP36
@@ -211,6 +229,8 @@ void setup_DATASETS()
 
 void setup_VARS()
 {
+  if(debugging)
+    DEBUG.println("SETTING UP VARS...");
   debugging = true;  // <<<<<< Could be pin controlled...<<<<<<<<<
   verboseDebug = true;  // Same here...
   cmdCount = 0;
@@ -231,6 +251,8 @@ void setup_VARS()
 
 void setup_SCD30()
 {
+  if(debugging)
+    DEBUG.println("SETTING UP CO2 SENSOR...");
   if(!scd30.begin())
   {
     if(debugging)
@@ -250,6 +272,8 @@ void setup_SCD30()
 
 void setup_SPS30()
 {
+  if(debugging)
+    DEBUG.println("SETTING UP PARTICULATE SENSOR...");
   sps30.EnableDebugging(SPS30_DEBUG);
   if ((sps30.begin(SERIALPORT) == false)&&(debugging))
     DEBUG.println("SPS  :: COMM INIT FAILED");
@@ -272,6 +296,7 @@ void setup_SERIAL()
   {
     DEBUG.begin(DEBUG_SPEED);
     DEBUG.println("WOLFSAT RTOS");
+    DEBUG.println("SETTING UP SERIAL...");
   }
   LOGG1.begin(OPLOG_SPEED);
   //LOGG2.begin(OPLOG_SPEED);
@@ -281,6 +306,8 @@ void setup_SERIAL()
 
 void setup_LOGG(HardwareSerial& in_serial)
 {
+  if(debugging)
+    DEBUG.println("SETTING UP OPENLOG");
   oLog_append(in_serial, LOG_CMD, LOG_CMD);
   oLog_append(in_serial, LOG_TMP, LOG_TMP);
   oLog_append(in_serial, LOG_IMU, LOG_IMU);
@@ -293,6 +320,8 @@ void setup_LOGG(HardwareSerial& in_serial)
 
 void setup_IMU()
 {
+  if(debugging)
+    DEBUG.println("SETTING UP IMU");
   imu.settings.device.commInterface = IMU_MODE_I2C;
   imu.settings.device.mAddress = LSM9DS1_M;
   imu.settings.device.agAddress = LSM9DS1_AG;
@@ -312,6 +341,8 @@ void setup_IMU()
 
 void setup_TMP102(TMP102& in_TMP)
 {
+  if(debugging)
+    DEBUG.println("SETTING UP TMP102");
   in_TMP.begin();
   in_TMP.setFault(0);
   in_TMP.setAlertPolarity(1);
@@ -343,6 +374,7 @@ void loop()
   atmDat.reset();
   run_SCD30();
   run_HIH4030();
+  run_PRESSURE();
 
   imuDat.reset();
   run_IMU();
@@ -611,6 +643,19 @@ void run_SCD30()
   atmDat.set_data(co2);
   atmDat.set_data(locTemp);
   atmDat.set_data(rh);
+}
+
+
+
+void run_PRESSURE()
+{
+  double voltIn = analogRead(PIN_PRESSURE);
+  double voltSup = 5;
+  double voltActual = voltIn * 0.0049;
+  double magicFactor = 1.2002924558587479935794542536116;
+  double pressure = magicFactor *(((voltActual - (0.1 * voltSup)) * 15)
+                    / (0.8 * voltSup));
+  atmDat.set_data(pressure);
 }
 
 
