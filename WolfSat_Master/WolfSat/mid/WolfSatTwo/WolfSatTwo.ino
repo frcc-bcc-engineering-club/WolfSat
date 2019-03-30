@@ -7,7 +7,7 @@
  * object (DataSet<>), and then sends them to an SD card for data
  * logging.
  * 
- * By James Craft, and hopefully others...
+ * By James Craft, and Tyler Dow
  */
 
  // WolfSat_lib inclusion
@@ -33,18 +33,25 @@
 #define LOW_TEMP 49
 #define SPS30_DEBUG 0 // Can be changed to get debug info, 0 is none
 #define HIH4030_VCC 5 // Operating at optimal 5v
-#define SCD30_RDY 12
-#if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#define HIH4030_PIN A15
-#else
-#define HIH4030_PIN A0
-#endif
-#define PIN_TMP36 A1
+//#define SCD30_RDY 12
 
-//heater pins;
-#define Heater0 1
-#define Heater1 2
-#define Heater2 3
+// Pins
+#define PIN_HEATER0 12
+#define PIN_HEATER1 11
+#define PIN_HEATER2 10
+#define PIN_RESET 38
+#define PIN_RADNOISE 3
+#define PIN_RADSIG 2
+#define PIN_PRESSURE A5
+#define PIN_HUMIDITY A4
+#define PIN_EXTTMP A3
+#define INT_COULOMB A15
+#define INT_IMUM PJ4
+#define INT_IMU2 PJ3
+#define INT_IMU1 PJ2
+#define PIN_DBG 9
+#define PIN_CO2RDY 8
+//#define HIH4030_PIN A4
 
 
 // Static consts for DataSets
@@ -103,7 +110,9 @@ LSM9DS1 imu;
 TMP102 innerTemp1(0x48);
 SPS30 sps30;
 SCD30 scd30;
-HIH4030 hih4030(HIH4030_PIN, HIH4030_VCC); // No other setup required for this sensor
+HIH4030 hih4030(PIN_HUMIDITY, HIH4030_VCC); // No other setup required for this sensor
+double oldp,oldD;
+double lastPIDrun = millis();
 
 // Global Vars for datapoint tracking
 int dp_CMD;
@@ -114,7 +123,7 @@ int dp_RAD;
 int dp_ATM;
 
 // Special debug
-#define PIN_DBG 7
+//#define PIN_DBG 7
 
 void setup() 
 {
@@ -157,7 +166,7 @@ void setup_PINS()
 {
   pinMode(PIN_DBG, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(SCD30_RDY, INPUT);
+  pinMode(PIN_CO2RDY, INPUT);
 }
 
 
@@ -319,7 +328,7 @@ void loop()
   incTime();
   
   int pidValue = PID(25, innerTemp1.readTempC());
-  analogWrite(heater0,pidValue);
+  analogWrite(PIN_HEATER0,pidValue);
 
   
   sps30Dat.reset();
@@ -582,7 +591,7 @@ void run_SCD30()
   double co2 = 0;
   double locTemp = 0;
   double rh = 0;
-  if (digitalRead(SCD30_RDY) == HIGH)
+  if (digitalRead(PIN_CO2RDY) == HIGH)
   {
     if(scd30.dataAvailable())
     {
@@ -607,7 +616,7 @@ void run_SCD30()
 
 void run_TMP36()
 {
-  double reading = analogRead(PIN_TMP36);
+  double reading = analogRead(PIN_EXTTMP);
   double voltage = reading * 5.0;
   voltage /= 1024.0;
   double tempC = (voltage - 0.5) * 100;
@@ -838,8 +847,11 @@ byte oLog_nonVerboseSwitch(int in_CMD)
 }
 
 
-double oldp,oldD
-double lastPIDrun=millis();
+// PID controller by Tyler Dow
+
+// Copied and pasted to global vars section for consistency
+//double oldp,oldD;
+//double lastPIDrun=millis(); 
 
 int PID(double target,double current){
   double p,i,d;
@@ -848,18 +860,13 @@ int PID(double target,double current){
   
   p=(target-current);
   
-  i+=(p/1000)*5
+  i+=(p/1000)*5;
   i=constrain(i,-25,25);
-  d
   d=(p-oldp)*deltaTime;
-  d=d*0.1+olD*0.9;
+  d=d*0.1+oldD*0.9;
   
 
-  return constrain(p+i+d,9,255);
-  
-
-  
-  
+  return constrain(p+i+d,9,15);
 }
 
 

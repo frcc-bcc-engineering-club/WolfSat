@@ -7,7 +7,7 @@
  * object (DataSet<>), and then sends them to an SD card for data
  * logging.
  * 
- * By James Craft, and hopefully others...
+ * By James Craft, and Tyler Dow
  */
 
  // WolfSat_lib inclusion
@@ -36,22 +36,22 @@
 //#define SCD30_RDY 12
 
 // Pins
-#define Heater0 12
-#define Heater1 11
-#define Heater2 10
-#define reset1 38
-#define radNoise 3
-#define radSig 2
-#define pressure A5
-#define humidity A4
-#define PIN_TMP36 A3
+#define PIN_HEATER0 12
+#define PIN_HEATER1 11
+#define PIN_HEATER2 10
+#define PIN_RESET 38
+#define PIN_RADNOISE 3
+#define PIN_RADSIG 2
+#define PIN_PRESSURE A5
+#define PIN_HUMIDITY A4
+#define PIN_EXTTMP A3
 #define INT_COULOMB A15
-#define INT_IMU_M PJ4
-#define INT_IMU_2 PJ3
-#define INT_IMU_1 PJ2
+#define INT_IMUM PJ4
+#define INT_IMU2 PJ3
+#define INT_IMU1 PJ2
 #define PIN_DBG 9
-#define PIN_SCD30_RDY 8
-#define HIH4030_PIN A4
+#define PIN_CO2RDY 8
+//#define HIH4030_PIN A4
 
 
 // Static consts for DataSets
@@ -110,7 +110,9 @@ LSM9DS1 imu;
 TMP102 innerTemp1(0x48);
 SPS30 sps30;
 SCD30 scd30;
-HIH4030 hih4030(HIH4030_PIN, HIH4030_VCC); // No other setup required for this sensor
+HIH4030 hih4030(PIN_HUMIDITY, HIH4030_VCC); // No other setup required for this sensor
+double oldp,oldD;
+double lastPIDrun = millis();
 
 // Global Vars for datapoint tracking
 int dp_CMD;
@@ -164,7 +166,7 @@ void setup_PINS()
 {
   pinMode(PIN_DBG, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(PIN_SCD30_RDY, INPUT);
+  pinMode(PIN_CO2RDY, INPUT);
 }
 
 
@@ -326,7 +328,7 @@ void loop()
   incTime();
   
   int pidValue = PID(25, innerTemp1.readTempC());
-  analogWrite(Heater0,pidValue);
+  analogWrite(PIN_HEATER0,pidValue);
 
   
   sps30Dat.reset();
@@ -589,7 +591,7 @@ void run_SCD30()
   double co2 = 0;
   double locTemp = 0;
   double rh = 0;
-  if (digitalRead(PIN_SCD30_RDY) == HIGH)
+  if (digitalRead(PIN_CO2RDY) == HIGH)
   {
     if(scd30.dataAvailable())
     {
@@ -614,7 +616,7 @@ void run_SCD30()
 
 void run_TMP36()
 {
-  double reading = analogRead(PIN_TMP36);
+  double reading = analogRead(PIN_EXTTMP);
   double voltage = reading * 5.0;
   voltage /= 1024.0;
   double tempC = (voltage - 0.5) * 100;
@@ -845,8 +847,11 @@ byte oLog_nonVerboseSwitch(int in_CMD)
 }
 
 
-double oldp,oldD;
-double lastPIDrun=millis();
+// PID controller by Tyler Dow
+
+// Copied and pasted to global vars section for consistency
+//double oldp,oldD;
+//double lastPIDrun=millis(); 
 
 int PID(double target,double current){
   double p,i,d;
@@ -862,10 +867,6 @@ int PID(double target,double current){
   
 
   return constrain(p+i+d,9,15);
-  
-
-  
-  
 }
 
 
