@@ -33,18 +33,25 @@
 #define LOW_TEMP 49
 #define SPS30_DEBUG 0 // Can be changed to get debug info, 0 is none
 #define HIH4030_VCC 5 // Operating at optimal 5v
-#define SCD30_RDY 12
-#if defined (__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#define HIH4030_PIN A15
-#else
-#define HIH4030_PIN A0
-#endif
-#define PIN_TMP36 A1
+//#define SCD30_RDY 12
 
-//heater pins;
-#define Heater0 1
-#define Heater1 2
-#define Heater2 3
+// Pins
+#define Heater0 12
+#define Heater1 11
+#define Heater2 10
+#define reset1 38
+#define radNoise 3
+#define radSig 2
+#define pressure A5
+#define humidity A4
+#define PIN_TMP36 A3
+#define INT_COULOMB A15
+#define INT_IMU_M PJ4
+#define INT_IMU_2 PJ3
+#define INT_IMU_1 PJ2
+#define PIN_DBG 9
+#define PIN_SCD30_RDY 8
+#define HIH4030_PIN A4
 
 
 // Static consts for DataSets
@@ -114,7 +121,7 @@ int dp_RAD;
 int dp_ATM;
 
 // Special debug
-#define PIN_DBG 7
+//#define PIN_DBG 7
 
 void setup() 
 {
@@ -157,7 +164,7 @@ void setup_PINS()
 {
   pinMode(PIN_DBG, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(SCD30_RDY, INPUT);
+  pinMode(PIN_SCD30_RDY, INPUT);
 }
 
 
@@ -319,7 +326,7 @@ void loop()
   incTime();
   
   int pidValue = PID(25, innerTemp1.readTempC());
-  analogWrite(heater0,pidValue);
+  analogWrite(Heater0,pidValue);
 
   
   sps30Dat.reset();
@@ -582,7 +589,7 @@ void run_SCD30()
   double co2 = 0;
   double locTemp = 0;
   double rh = 0;
-  if (digitalRead(SCD30_RDY) == HIGH)
+  if (digitalRead(PIN_SCD30_RDY) == HIGH)
   {
     if(scd30.dataAvailable())
     {
@@ -838,7 +845,7 @@ byte oLog_nonVerboseSwitch(int in_CMD)
 }
 
 
-double oldp,oldD
+double oldp,oldD;
 double lastPIDrun=millis();
 
 int PID(double target,double current){
@@ -848,14 +855,13 @@ int PID(double target,double current){
   
   p=(target-current);
   
-  i+=(p/1000)*5
+  i+=(p/1000)*5;
   i=constrain(i,-25,25);
-  d
   d=(p-oldp)*deltaTime;
-  d=d*0.1+olD*0.9;
+  d=d*0.1+oldD*0.9;
   
 
-  return constrain(p+i+d,9,255);
+  return constrain(p+i+d,9,15);
   
 
   
