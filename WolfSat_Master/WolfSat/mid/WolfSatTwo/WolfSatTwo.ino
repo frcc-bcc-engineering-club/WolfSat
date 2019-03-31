@@ -948,7 +948,16 @@ int PID(double target,double current){
   i=constrain(i,-25,25);
   d=(p-oldp)*deltaTime;
   d=d*0.1+oldD*0.9;
-  
+
+  if(debugging)
+  {
+    DEBUG.print(" p = ");
+    DEBUG.print(p);
+    DEBUG.print(" i = ");
+    DEBUG.print(i);
+    DEBUG.print(" d = ");
+    DEBUG.println(d);
+  }
 
   return constrain(p+i+d,9,15);
 }

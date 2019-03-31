@@ -1,16 +1,16 @@
 /*
- *  In Memory of Randy
- */
+    In Memory of Randy
+*/
 /*
- * This is the WolfSat RT'OS' for the FRCC-BCC Engineering Club.
- * It queries several sensors for data, logs them into a template
- * object (DataSet<>), and then sends them to an SD card for data
- * logging.
- * 
- * By James Craft, and Tyler Dow
- */
+   This is the WolfSat RT'OS' for the FRCC-BCC Engineering Club.
+   It queries several sensors for data, logs them into a template
+   object (DataSet<>), and then sends them to an SD card for data
+   logging.
 
- // WolfSat_lib inclusion
+   By James Craft, and Tyler Dow
+*/
+
+// WolfSat_lib inclusion
 #include <DataSet.h>
 
 
@@ -22,7 +22,7 @@
 #include <LSM9DS1_Types.h>
 #include <SparkFunLSM9DS1.h>
 //#include <SparkFun_Qwiic_OpenLog_Arduino_Library.h>
-#include "SparkFun_SCD30_Arduino_Library.h" 
+#include "SparkFun_SCD30_Arduino_Library.h"
 #include <SparkFun_HIH4030.h>
 #include <Wire.h>
 
@@ -51,6 +51,15 @@
 #define INT_IMU1 PJ2
 #define PIN_DBG 9
 #define PIN_CO2RDY 8
+#define PIN_LEDRED 0
+#define PIN_LEDGRN 0
+#define PIN_LEDORJ 0
+#define PIN_LEDYLW 0
+#define PIN_BUT0 0
+#define PIN_BUT1 0
+#define PIN_BUT2 0
+#define PIN_BUT3 0
+
 //#define HIH4030_PIN A4
 
 
@@ -86,8 +95,8 @@
 #define PARTI Serial
 #define DEBUG Serial3
 #else
-// This code was designed to run on an Arduino Mega, 
-// but needs to be accomodating to UNO debugs 
+// This code was designed to run on an Arduino Mega,
+// but needs to be accomodating to UNO debugs
 #define DEBUG Serial
 #define LOGG1 Serial
 #define LOGG2 Serial
@@ -113,7 +122,7 @@ TMP102 innerTemp1(0x48);
 SPS30 sps30;
 SCD30 scd30;
 HIH4030 hih4030(PIN_HUMIDITY, HIH4030_VCC); // No other setup required for this sensor
-double oldp,oldD;
+double oldp, oldD;
 double lastPIDrun = millis();
 
 // Global Vars for datapoint tracking
@@ -127,7 +136,7 @@ int dp_ATM;
 // Special debug
 //#define PIN_DBG 7
 
-void setup() 
+void setup()
 {
   delay(1000);
   setup_PINS();
@@ -138,31 +147,31 @@ void setup()
   setup_DEBUG();
   setup_LOGG(LOGG1);
   //setup_LOGG(LOGG2);
-  
-  if(debugging)
+
+  if (debugging)
   {
     dubLog(1);
-  }    
+  }
   else
-    dubLog(2); 
+    dubLog(2);
 
   if (debugging)
     DEBUG.println("SETUP :: SETTING UP IMU...");
   setup_IMU();
-  if(debugging)
+  if (debugging)
   {
     dubLog(4);
   }
 
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETUP :: SETTING UP TMP102...");
   setup_TMP102(innerTemp1);
-  if(debugging)
+  if (debugging)
   {
     dubLog(3);
   }
 
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETUP :: SETTING UP SPS30...");
   setup_SPS30();
   if (debugging)
@@ -170,12 +179,12 @@ void setup()
     dubLog(6);
   }
 
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETUP :: SETTING UP SCD30...");
   setup_SCD30();
   if (debugging)
   {
-    dubLog(7);  
+    dubLog(7);
   }
 }
 
@@ -185,25 +194,28 @@ void setup_PINS()
   pinMode(PIN_DBG, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_CO2RDY, INPUT);
+  pinMode(PIN_HEATER0, INPUT);
+  pinMode(PIN_HEATER1, INPUT);
+  pinMode(PIN_HEATER2, INPUT);
 }
 
 
 void setup_DEBUG()
 {
-  if(digitalRead(PIN_DBG) == HIGH)
+  if (digitalRead(PIN_DBG) == HIGH)
   {
     debugging = true;
     //DEBUG.println("Hello!");
     int cnt = millis();
     int lim = cnt + 5000;
-    while(true)
-    {      
+    while (true)
+    {
       DEBUG.println("Listen up LittleWolf");
       //DEBUG.flush();
       //delay(20);
-      if(DEBUG.available() > 0)
+      if (DEBUG.available() > 0)
       {
-        if(DEBUG.readStringUntil('\r') == "I'm listening...")
+        if (DEBUG.readStringUntil('\r') == "I'm listening...")
         {
           DEBUG.println("Hello LittleWolf...");
           break;
@@ -213,14 +225,14 @@ void setup_DEBUG()
       {
         cnt = millis();
       }
-  }
+    }
   }
 }
 
 
 void setup_DATASETS()
 {
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETTING UP DATASETS...");
   sps30Dat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_SPS30);
   imuDat = DataSet<double>(DATA_POINT + TIME_POINTS + LIM_IMU);
@@ -231,7 +243,7 @@ void setup_DATASETS()
 
 void setup_VARS()
 {
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETTING UP VARS...");
   debugging = true;  // <<<<<< Could be pin controlled...<<<<<<<<<
   verboseDebug = true;  // Same here...
@@ -253,18 +265,18 @@ void setup_VARS()
 
 void setup_SCD30()
 {
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETTING UP CO2 SENSOR...");
-  if(!scd30.begin())
+  if (!scd30.begin())
   {
-    if(debugging)
+    if (debugging)
     {
-      DEBUG.println("SCD30 :: INIT FAILURE");  
-    }    
+      DEBUG.println("SCD30 :: INIT FAILURE");
+    }
   }
   else
   {
-    if(debugging)
+    if (debugging)
       DEBUG.println("SCD30 :: INIT SUCCESS");
     //scd30.beginMeasuring();
 
@@ -274,31 +286,31 @@ void setup_SCD30()
 
 void setup_SPS30()
 {
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETTING UP PARTICULATE SENSOR...");
   sps30.EnableDebugging(SPS30_DEBUG);
-  if ((sps30.begin(SERIALPORT) == false)&&(debugging))
+  if ((sps30.begin(SERIALPORT) == false) && (debugging))
     DEBUG.println("SPS  :: COMM INIT FAILED");
-  if ((sps30.probe() == false)&&(debugging))
+  if ((sps30.probe() == false) && (debugging))
     DEBUG.println("SPS  :: PROBE INIT FAILED");
   else if (debugging)
     DEBUG.println("SPS  :: PROBE INIT SUCCESS");
-  if ((sps30.reset() == false)&&(debugging))
+  if ((sps30.reset() == false) && (debugging))
     DEBUG.println("SPS  :: RESET FAIL");
-  if ((sps30.start() == true)&&(debugging))
+  if ((sps30.start() == true) && (debugging))
     DEBUG.println("SPS  :: BEGINNING MEASUREMENT");
-  else if(debugging)
+  else if (debugging)
     DEBUG.println("SPS  :: MEASUREMENT FAILURE");
 }
 
 
 void setup_SERIAL()
 {
-  if(debugging)
+  if (debugging)
   {
     DEBUG.begin(DEBUG_SPEED);
     DEBUG.println("WOLFSAT RTOS");
-    DEBUG.println("SETTING UP SERIAL...");
+    DEBUG.println("SE TTING UP SERIAL...");
   }
   LOGG1.begin(OPLOG_SPEED);
   //LOGG2.begin(OPLOG_SPEED);
@@ -308,7 +320,7 @@ void setup_SERIAL()
 
 void setup_LOGG(HardwareSerial& in_serial)
 {
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETTING UP OPENLOG");
   oLog_append(in_serial, LOG_CMD, TYPE_CSV, LOG_CMD);
   oLog_append(in_serial, LOG_TMP, TYPE_CSV, LOG_TMP);
@@ -322,7 +334,7 @@ void setup_LOGG(HardwareSerial& in_serial)
 
 void setup_IMU()
 {
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETTING UP IMU");
   imu.settings.device.commInterface = IMU_MODE_I2C;
   imu.settings.device.mAddress = LSM9DS1_M;
@@ -330,7 +342,7 @@ void setup_IMU()
 
   if (!imu.begin())
   {
-    if(debugging)
+    if (debugging)
     {
       DEBUG.println("Failed to communicate with LSM9DS1.");
       DEBUG.println("Looping to infinity.");
@@ -343,7 +355,7 @@ void setup_IMU()
 
 void setup_TMP102(TMP102& in_TMP)
 {
-  if(debugging)
+  if (debugging)
     DEBUG.println("SETTING UP TMP102");
   in_TMP.begin();
   in_TMP.setFault(0);
@@ -356,14 +368,14 @@ void setup_TMP102(TMP102& in_TMP)
 }
 
 
-void loop() 
+void loop()
 {
   incTime();
-  
-  int pidValue = PID(25, innerTemp1.readTempC());
-  analogWrite(PIN_HEATER0,pidValue);
 
-  
+  int pidValue = PID(25, innerTemp1.readTempC());
+  analogWrite(PIN_HEATER0, pidValue);
+
+
   sps30Dat.reset();
   run_SPS30();
   dubLog(LOG_PAR, sps30Dat);
@@ -372,7 +384,7 @@ void loop()
   run_TMP36();
   run_TMP102(innerTemp1);
   dubLog(LOG_TMP, tmpDat);
-    
+
   atmDat.reset();
   run_SCD30();
   run_HIH4030();
@@ -382,11 +394,11 @@ void loop()
   run_IMU();
   dubLog(LOG_IMU, imuDat);
 
-  if(debugging)
+  if (debugging)
     bigOuts();
-    
+
   DEBUG.println("Done...");
-  
+
   delay(2010);
   heartBeat();
 }
@@ -408,9 +420,9 @@ void heartBeat()
 void incTime()
 {
   mil = millis();
-  if((mil >= (lastMil + 1000)) || (mil <= (lastMil - 1000)))
+  if ((mil >= (lastMil + 1000)) || (mil <= (lastMil - 1000)))
   {
-    if(mil >= (lastMil + 2000))
+    if (mil >= (lastMil + 2000))
     {
       while (mil >= (lastMil + 1000))
       {
@@ -421,19 +433,19 @@ void incTime()
     else
       second++;
     lastMil = millis();
-    if(second >= 60)
+    if (second >= 60)
     {
-      while(second >= 60)
+      while (second >= 60)
       {
         minute++;
         second -= 60;
       }
-      if(minute >= 60)
-      while(minute >= 60)
-      {
-        hour++;
-        minute -= 60;
-      }
+      if (minute >= 60)
+        while (minute >= 60)
+        {
+          hour++;
+          minute -= 60;
+        }
     }
   }
 }
@@ -463,7 +475,7 @@ template<typename type> void dubLog(String in_file, DataSet<type> in_set)
 
 void bigOuts()
 {
-  DEBUG.println("WOLFSAT RTOS");
+  DEBUG.println("WOLFSAT RTOS :: RUNNING");
   DEBUG.println();
   DEBUG.println(timeOuts());
   DEBUG.println(particulatesOuts());
@@ -591,20 +603,20 @@ template<typename type> void outSet(DataSet<type>& in_set)
     DEBUG.print(" LIM: ");
     DEBUG.println(lim);
   }
-  while(pos < lim)
+  while (pos < lim)
   {
     delay(100);
     String toWrite = (String)in_set.get_data(pos);
     DEBUG.print((String)pos);
     DEBUG.print(" of ");
     DEBUG.print((String)lim);
-    DEBUG.print(" ");    
+    DEBUG.print(" ");
     delay(20);
-      
+
     DEBUG.println(toWrite);
-    pos++;      
+    pos++;
     DEBUG.flush();
-  } 
+  }
   delay(3000);
 }
 
@@ -613,7 +625,7 @@ void run_HIH4030()
 {
   double val = hih4030.getSensorRH();
   atmDat.set_data(val);
-  if(debugging)
+  if (debugging)
   {
     DEBUG.println("HIH4030 :: DATA LOGGED");
   }
@@ -627,7 +639,7 @@ void run_SCD30()
   double rh = 0;
   if (digitalRead(PIN_CO2RDY) == HIGH)
   {
-    if(scd30.dataAvailable())
+    if (scd30.dataAvailable())
     {
       co2 = scd30.getCO2();
       locTemp = scd30.getTemperature();
@@ -636,11 +648,10 @@ void run_SCD30()
     else if (debugging)
     {
       DEBUG.println("SCD30 :: DATA UNAVAILABLE");
-    }    
+    }
   }
-  else
-    if(debugging)
-      DEBUG.println("SCD30 :: DATA NOT READY");
+  else if (debugging)
+    DEBUG.println("SCD30 :: DATA NOT READY");
 
   atmDat.set_data(co2);
   atmDat.set_data(locTemp);
@@ -655,8 +666,8 @@ void run_PRESSURE()
   double voltSup = 5;
   double voltActual = voltIn * 0.0049;
   double magicFactor = 1.2002924558587479935794542536116;
-  double pressure = magicFactor *(((voltActual - (0.1 * voltSup)) * 15)
-                    / (0.8 * voltSup));
+  double pressure = magicFactor * (((voltActual - (0.1 * voltSup)) * 15)
+                                   / (0.8 * voltSup));
   atmDat.set_data(pressure);
 }
 
@@ -735,7 +746,7 @@ void fill_sps30Dat(sps_values& in_data)
   sps30Dat.set_data(in_data.NumPM4);
   sps30Dat.set_data(in_data.NumPM10);
   sps30Dat.set_data(in_data.PartSize);
-  
+
 }
 
 
@@ -745,43 +756,43 @@ void oLog_enterCMD(HardwareSerial& in_serial)
   in_serial.write(26);
   in_serial.write(26);
   in_serial.write(26);
-  while(true)
-    if(in_serial.available())
-      if(in_serial.read() == '>')
+  while (true)
+    if (in_serial.available())
+      if (in_serial.read() == '>')
         break;
 }
 
 
 void oLog_exitCMD(HardwareSerial& in_serial)
 {
-  while(true)
-    if(in_serial.available())
-      if(in_serial.read() == '<')
+  while (true)
+    if (in_serial.available())
+      if (in_serial.read() == '<')
         break;
 }
 
 
 /*void oLog_append(HardwareSerial& in_serial, String in_file, String in_string)
-{
+  {
   oLog_changeFile(in_serial, in_file);
   in_serial.println(in_string);
   delay(20);
   oLog_changeFile(in_serial, LOG_CMD);
-//  if(debugging)
-//  {
-//    DEBUG.print("OLOG :: FILE APPENDED ");
-//    DEBUG.print(in_file);
-//    DEBUG.print(" ");
-//    DEBUG.println(in_string);
-//  }
-}
+  //  if(debugging)
+  //  {
+  //    DEBUG.print("OLOG :: FILE APPENDED ");
+  //    DEBUG.print(in_file);
+  //    DEBUG.print(" ");
+  //    DEBUG.println(in_string);
+  //  }
+  }
 */
 
 
 void oLog_append(HardwareSerial& in_serial, String in_file, String in_type, String in_header)
 {
-//  String theFile = in_file;
-//  theFile.concat(in_type);
+  //  String theFile = in_file;
+  //  theFile.concat(in_type);
   oLog_changeFile(in_serial, in_file, in_type);
   in_serial.println(in_header);
   oLog_changeFile(in_serial, LOG_CMD, TYPE_TXT);
@@ -812,8 +823,8 @@ template <typename type> String oLog_formatCSV(DataSet<type> in_set)
 }
 
 /*
-template <typename type> void oLog_append(HardwareSerial& in_serial, String in_file, DataSet<type> in_set)
-{
+  template <typename type> void oLog_append(HardwareSerial& in_serial, String in_file, DataSet<type> in_set)
+  {
   oLog_changeFile(in_serial, in_file);
   int pos = 0;
   int lim = in_set.get_size();
@@ -824,14 +835,14 @@ template <typename type> void oLog_append(HardwareSerial& in_serial, String in_f
     pos++;
   }
   oLog_changeFile(in_serial, LOG_CMD);
-  
-//  if(debugging)
-//  {
-//    DEBUG.print("OLOG :: FILE APPENDED ");
-//    DEBUG.print(in_file);
-//    DEBUG.println(" WITH DATASET");
-//  }
-}
+
+  //  if(debugging)
+  //  {
+  //    DEBUG.print("OLOG :: FILE APPENDED ");
+  //    DEBUG.print(in_file);
+  //    DEBUG.println(" WITH DATASET");
+  //  }
+  }
 
 */
 
@@ -848,12 +859,12 @@ void oLog_changeFile(HardwareSerial& in_serial, String in_name, String in_type)
   delay(10);
   oLog_exitCMD(in_serial);
   activeLog = in_name;
-//  if (debugging)
-//  {
-//    DEBUG.print("OLOG :: ACTIVE LOG ");
-//    DEBUG.println(activeLog);
-//    delay(20);
-//  }
+  //  if (debugging)
+  //  {
+  //    DEBUG.print("OLOG :: ACTIVE LOG ");
+  //    DEBUG.println(activeLog);
+  //    delay(20);
+  //  }
 }
 
 
@@ -862,35 +873,35 @@ void oLog_logCMD(HardwareSerial& in_serial, int in_CMD)
   String toLog = "CMD :: ";
   toLog.concat((String)cmdCount);
   toLog.concat(" - ");
-  if(verboseDebug)
+  if (verboseDebug)
     toLog.concat(oLog_verboseSwitch(in_CMD));
   else
     toLog.concat((String)oLog_nonVerboseSwitch(in_CMD));
-  if(activeLog != LOG_CMD)
+  if (activeLog != LOG_CMD)
   {
     oLog_changeFile(in_serial, LOG_CMD, TYPE_TXT);
     if (debugging)
     {
       DEBUG.println("OLOG :: NOT COMMAND LOG");
-      delay(20);      
+      delay(20);
     }
-      
+
   }
   in_serial.println(toLog);
   delay(20);
-//  if (debugging)
-//  {
-//    DEBUG.print("OLOG :: ");
-//    DEBUG.println(toLog);
-//    delay(20);
-//  }
+  //  if (debugging)
+  //  {
+  //    DEBUG.print("OLOG :: ");
+  //    DEBUG.println(toLog);
+  //    delay(20);
+  //  }
 }
 
 
 String oLog_verboseSwitch(int in_CMD)
 {
   String toRet = "UNDEFINED";
-  switch(in_CMD)
+  switch (in_CMD)
   {
     case 0:
       toRet = "WOLFSAT BOOT";
@@ -900,7 +911,7 @@ String oLog_verboseSwitch(int in_CMD)
       break;
     case 2:
       toRet = "DEBUG INACTIVE";
-      break;      
+      break;
     case 3:
       toRet = "TMP SETUP";
       break;
@@ -935,22 +946,34 @@ byte oLog_nonVerboseSwitch(int in_CMD)
 
 // Copied and pasted to global vars section for consistency
 //double oldp,oldD;
-//double lastPIDrun=millis(); 
+//double lastPIDrun=millis();
+double i;
 
-int PID(double target,double current){
-  double p,i,d;
-  long deltaTime=millis()-lastPIDrun;
-  lastPIDrun=millis();
-  
-  p=(target-current);
-  
-  i+=(p/1000)*5;
-  i=constrain(i,-25,25);
-  d=(p-oldp)*deltaTime;
-  d=d*0.1+oldD*0.9;
-  
+int PID(double target, double current) {
+  double p, d;
+  double deltaTime = (double) millis() - lastPIDrun;
+  lastPIDrun = millis();
 
-  return constrain(p+i+d,9,15);
+  p = (target - current);
+
+  i += (p / 1000) ;
+  i = constrain(i, -25, 25);
+  d = (p - oldp) * (deltaTime / 1000);
+  d = d * 0.1 + oldD * 0.9;
+
+  if (debugging)
+  {
+    DEBUG.print(" p = ");
+    DEBUG.print(p);
+    DEBUG.print(" i = ");
+    DEBUG.print(i);
+    DEBUG.print(" d = ");
+    DEBUG.print(d);
+    DEBUG.print (" total PID: ");
+    DEBUG.println(constrain(p*25 + i + d*5, 0, 255));
+  }
+
+  return constrain(p*25 + i + d*5, 0, 255);
 }
 
 
