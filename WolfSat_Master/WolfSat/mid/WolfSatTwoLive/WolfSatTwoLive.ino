@@ -379,28 +379,32 @@ void loop()
   sps30Dat.reset();
   run_SPS30();
   dubLog(LOG_PAR, sps30Dat);
+  delay(20);
 
   tmpDat.reset();
   run_TMP36();
   run_TMP102(innerTemp1);
   dubLog(LOG_TMP, tmpDat);
+  delay(20);
 
   atmDat.reset();
   run_SCD30();
   run_HIH4030();
   run_PRESSURE();
+  delay(20);
 
   imuDat.reset();
   run_IMU();
   dubLog(LOG_IMU, imuDat);
+  delay(20);
 
   if (debugging)
     bigOuts();
 
   DEBUG.println("Done...");
 
-  delay(2010);
-  heartBeat();
+  //delay(2010);
+  //heartBeat();
 }
 
 
