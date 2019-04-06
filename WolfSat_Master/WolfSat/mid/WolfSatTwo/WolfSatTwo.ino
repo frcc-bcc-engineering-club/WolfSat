@@ -49,13 +49,13 @@
 #define INT_IMUM PJ4
 #define INT_IMU2 PJ3
 #define INT_IMU1 PJ2
-#define PIN_DBG 9
+#define PIN_DBG 27
 #define PIN_CO2RDY 8
 #define PIN_LEDRED 0
-#define PIN_LEDGRN 0
-#define PIN_LEDORJ 0
+#define PIN_LEDGRN 53
+#define PIN_LEDORJ 50
 #define PIN_LEDYLW 0
-#define PIN_BUT0 0
+#define PIN_BUT0 47
 #define PIN_BUT1 0
 #define PIN_BUT2 0
 #define PIN_BUT3 0
@@ -124,6 +124,7 @@ SCD30 scd30;
 HIH4030 hih4030(PIN_HUMIDITY, HIH4030_VCC); // No other setup required for this sensor
 double oldp, oldD;
 double lastPIDrun = millis();
+bool runMission;
 
 // Global Vars for datapoint tracking
 int dp_CMD;
@@ -140,12 +141,20 @@ void setup()
 {
   delay(1000);
   setup_PINS();
+  digitalWrite(PIN_LEDORJ, HIGH);
+
+  delay(20);
   setup_VARS();
+  delay(20);
   setup_DATASETS();
+  delay(20);
   setup_SERIAL();
+  delay(20);
   //delay(100);
   setup_DEBUG();
+  delay(20);
   setup_LOGG(LOGG1);
+  delay(20);
   //setup_LOGG(LOGG2);
 
   if (debugging)
@@ -158,6 +167,7 @@ void setup()
   if (debugging)
     DEBUG.println("SETUP :: SETTING UP IMU...");
   setup_IMU();
+  delay(20);
   if (debugging)
   {
     dubLog(4);
@@ -166,6 +176,7 @@ void setup()
   if (debugging)
     DEBUG.println("SETUP :: SETTING UP TMP102...");
   setup_TMP102(innerTemp1);
+  delay(20);
   if (debugging)
   {
     dubLog(3);
@@ -174,6 +185,7 @@ void setup()
   if (debugging)
     DEBUG.println("SETUP :: SETTING UP SPS30...");
   setup_SPS30();
+  delay(20);
   if (debugging)
   {
     dubLog(6);
@@ -182,10 +194,12 @@ void setup()
   if (debugging)
     DEBUG.println("SETUP :: SETTING UP SCD30...");
   setup_SCD30();
+  delay(20);
   if (debugging)
   {
     dubLog(7);
   }
+  digitalWrite(PIN_LEDORJ, LOW);
 }
 
 
@@ -197,6 +211,10 @@ void setup_PINS()
   pinMode(PIN_HEATER0, INPUT);
   pinMode(PIN_HEATER1, INPUT);
   pinMode(PIN_HEATER2, INPUT);
+  pinMode(PIN_BUT0, INPUT_PULLUP);
+  pinMode(PIN_LEDGRN, OUTPUT);
+  pinMode(PIN_LEDORJ, OUTPUT);
+  digitalWrite(PIN_LEDGRN, HIGH);
 }
 
 
@@ -260,6 +278,7 @@ void setup_VARS()
   dp_PAR = 0;
   dp_RAD = 0;
   dp_ATM = 0;
+  runMission = false;
 }
 
 
@@ -370,9 +389,12 @@ void setup_TMP102(TMP102& in_TMP)
 
 void loop()
 {
+  if(runMission == false)
+    standby();
+  
   incTime();
 
-  int pidValue = PID(25, innerTemp1.readTempC());
+  int pidValue = PID(30, innerTemp1.readTempC());
   analogWrite(PIN_HEATER0, pidValue);
 
 
@@ -386,7 +408,7 @@ void loop()
   run_TMP102(innerTemp1);
   dubLog(LOG_TMP, tmpDat);
   delay(20);
-
+  
   atmDat.reset();
   run_SCD30();
   run_HIH4030();
@@ -399,24 +421,38 @@ void loop()
   delay(20);
 
   if (debugging)
+  {
     bigOuts();
+    DEBUG.println("Done...");
+  }
 
-  DEBUG.println("Done...");
+  delay(2010);
+  heartBeat();
+}
 
-  //delay(2010);
-  //heartBeat();
+
+void standby()
+{
+  while(runMission == false)
+  {
+    if(digitalRead(PIN_BUT0) == LOW)
+    {
+      runMission = true;
+      digitalWrite(PIN_LEDGRN, LOW);
+    }
+  }
 }
 
 
 void heartBeat()
 {
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(PIN_LEDORJ, HIGH);
   delay(45);
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(PIN_LEDORJ, LOW);
   delay(45);
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(PIN_LEDORJ, HIGH);
   delay(45);
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(PIN_LEDORJ, LOW);
   delay(360);
 }
 
@@ -648,6 +684,8 @@ void run_SCD30()
       co2 = scd30.getCO2();
       locTemp = scd30.getTemperature();
       rh = scd30.getHumidity();
+      if(debugging)
+        DEBUG.println("SCD30 :: DATA LOGGED");
     }
     else if (debugging)
     {
@@ -658,8 +696,8 @@ void run_SCD30()
     DEBUG.println("SCD30 :: DATA NOT READY");
 
   atmDat.set_data(co2);
-  atmDat.set_data(locTemp);
   atmDat.set_data(rh);
+  atmDat.set_data(locTemp);
 }
 
 
@@ -672,7 +710,10 @@ void run_PRESSURE()
   double magicFactor = 1.2002924558587479935794542536116;
   double pressure = magicFactor * (((voltActual - (0.1 * voltSup)) * 15)
                                    / (0.8 * voltSup));
+
   atmDat.set_data(pressure);
+  if(debugging)
+    DEBUG.println("PRESSURE :: DATA LOGGED");
 }
 
 
@@ -683,6 +724,8 @@ void run_TMP36()
   voltage /= 1024.0;
   double tempC = (voltage - 0.5) * 100;
   fill_tmpDat(tempC);
+  if(debugging)
+    DEBUG.println("TMP36 :: DATA LOGGED");
 }
 
 
@@ -698,6 +741,8 @@ void run_TMP102(TMP102& in_TMP)
   in_TMP.wakeup();
   fill_tmpDat(in_TMP);
   in_TMP.sleep();
+  if(debugging)
+    DEBUG.println("TMP102 :: DATA LOGGED");
 }
 
 void fill_tmpDat(TMP102& in_TMP)
@@ -712,6 +757,8 @@ void run_IMU()
   imu.readGyro();
   imu.readMag();
   fill_imuDat();
+  if(debugging)
+    DEBUG.println("IMU :: DATA LOGGED");
 }
 
 
@@ -735,6 +782,8 @@ bool run_SPS30()
   uint8_t check, errCnt = 0;
   sps30.GetValues(&loc);
   fill_sps30Dat(loc);
+  if(debugging)
+    DEBUG.println("SPS30 :: DATA LOGGED");
 }
 
 
@@ -760,19 +809,32 @@ void oLog_enterCMD(HardwareSerial& in_serial)
   in_serial.write(26);
   in_serial.write(26);
   in_serial.write(26);
-  while (true)
+  long startTime = millis();
+  while (true){
+
+  if(millis()-10000>startTime){
+    DEBUG.println("oLog_enterCMD lock");
+    break;
+    }
     if (in_serial.available())
       if (in_serial.read() == '>')
         break;
+}
 }
 
 
 void oLog_exitCMD(HardwareSerial& in_serial)
 {
-  while (true)
+  long startTime = millis();
+  while (true){
+  if(millis()-10000>startTime){
+    DEBUG.println("oLog_exitCMD lock");
+    break;
+  }
     if (in_serial.available())
       if (in_serial.read() == '<')
         break;
+  }
 }
 
 
@@ -804,6 +866,8 @@ void oLog_append(HardwareSerial& in_serial, String in_file, String in_type, Stri
 
 template<typename type> void oLog_append(HardwareSerial& in_serial, String in_file, DataSet<type> in_set)
 {
+  if(debugging)
+    DEBUG.println("OLOG :: APPENDING...");
   oLog_changeFile(in_serial, in_file, TYPE_CSV);
   String toLog = oLog_formatCSV(in_set);
   in_serial.println(toLog);
@@ -818,6 +882,13 @@ template <typename type> String oLog_formatCSV(DataSet<type> in_set)
   String toRet = "";
   while (pos < lim)
   {
+    if(debugging)
+    {
+      DEBUG.print("OLOG :: CSV POS = ");
+      DEBUG.print(pos);
+      DEBUG.print(" LIM = ");
+      DEBUG.println(lim);
+    }
     String loc = (String)in_set.get_data(pos);
     loc.concat(", ");
     toRet.concat(loc);
@@ -977,7 +1048,7 @@ int PID(double target, double current) {
     DEBUG.println(constrain(p*25 + i + d*5, 0, 255));
   }
 
-  return constrain(p*25 + i + d*5, 0, 255);
+  return constrain(p*75 + i + d*5, 0, 255);
 }
 
 
