@@ -1,0 +1,6 @@
+ppend LOG_CMD.txt
+append LOG_ATM.csv
+LOG_ATM
+append LOG_CMD.txt
+CMD :: 0 - WOLFSAT BOOT
+CMD :: 0 - DEBUG ACTIVE

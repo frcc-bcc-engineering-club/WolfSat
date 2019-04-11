@@ -139,7 +139,7 @@ int dp_ATM;
 
 void setup()
 {
-  delay(1000);
+  //delay(10000);
   setup_PINS();
   digitalWrite(PIN_LEDORJ, HIGH);
 
@@ -151,7 +151,7 @@ void setup()
   setup_SERIAL();
   delay(20);
   //delay(100);
-  setup_DEBUG();
+  //setup_DEBUG();
   delay(20);
   setup_LOGG(LOGG1);
   delay(20);
@@ -206,7 +206,7 @@ void setup()
 void setup_PINS()
 {
   pinMode(PIN_DBG, INPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
+  //pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_CO2RDY, INPUT);
   pinMode(PIN_HEATER0, INPUT);
   pinMode(PIN_HEATER1, INPUT);
@@ -353,6 +353,10 @@ void setup_LOGG(HardwareSerial& in_serial)
 
 void setup_IMU()
 {
+  imu.settings.device.commInterface = IMU_MODE_I2C;
+  imu.settings.device.mAddress = LSM9DS1_M;
+  imu.settings.device.agAddress = LSM9DS1_AG;
+  
   if (debugging)
     DEBUG.println("SETTING UP IMU");
   imu.settings.device.commInterface = IMU_MODE_I2C;
